@@ -34,7 +34,7 @@ export class ApiRequest {
         return content;
     }
 
-    // public get(request: string, params: any[] = [], queryParameter: string|null = null){
+    // public get(request: string, params: [] = [], queryParameter: string|null = null){
     //     let chaine = this.prepare(request, params, queryParameter);
     //     try{
     //         let result = this.send($chaine);
