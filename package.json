@@ -1,0 +1,37 @@
+{
+  "name": "ffttapi-node",
+  "version": "1.0.0",
+  "description": "\"# ffttAPI\"",
+  "main": "source/server.ts",
+  "scripts": {
+    "start": "nodemon source/server.ts",
+    "build": "rm -rf build/ && prettier --write source/ && tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/StephSako/ffttAPI.git"
+  },
+  "keywords": [],
+  "author": "StephSako",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/StephSako/ffttAPI/issues"
+  },
+  "homepage": "https://github.com/StephSako/ffttAPI#readme",
+  "dependencies": {
+    "@types/axios": "^0.14.0",
+    "@types/express": "^4.17.13",
+    "@types/morgan": "^1.9.3",
+    "axios": "^0.27.2",
+    "crypto": "^1.0.1",
+    "express": "^4.18.1",
+    "html-entities": "^2.3.3",
+    "morgan": "^1.10.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.7.4",
+    "xml2js": "^0.4.23"
+  },
+  "devDependencies": {
+    "@types/xml2js": "^0.4.11"
+  }
+}
