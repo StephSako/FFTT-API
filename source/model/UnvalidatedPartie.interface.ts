@@ -8,5 +8,4 @@ export interface UnvalidatedPartie {
     adversaireNom: string;
     adversairePrenom: string;
     adversaireClassement: number;
-
 }

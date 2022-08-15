@@ -17,37 +17,37 @@ export class RencontreDetailsFactory
     {
         let joueursA: any = [];
         let joueursB: any = [];
-        array['joueur'].forEach((joueur: any) => {
-            joueursA.push([joueur['xja'] ?? '', joueur['xca'] ?? '']);
-            joueursB.push([joueur['xjb'] ?? '', joueur['xcb'] ?? '']);
+        array.joueur.forEach((joueur: any) => {
+            joueursA.push([joueur.xja ?? '', joueur.xca ?? '']);
+            joueursB.push([joueur.xjb ?? '', joueur.xcb ?? '']);
         })
 
         let joueursAFormatted = this.formatJoueurs(joueursA, clubEquipeA);
         let joueursBFormatted = this.formatJoueurs(joueursB, clubEquipeB);
 
-        let parties: Partie[] = this.getParties(array['partie']);
+        let parties: Partie[] = this.getParties(array.partie);
         let scoreA, scoreB, scores: any;
 
-        if (Array.isArray(array['resultat']['resa'] === 'array')) {
+        if (Array.isArray(array.resultat.resa === 'array')) {
             scores = this.getScores(parties);
-            scoreA = scores['scoreA'];
-            scoreB = scores['scoreB'];
+            scoreA = scores.scoreA;
+            scoreB = scores.scoreB;
         } else {
-            scoreA = array['resultat']['resa'] == "F0" ? 0 : array['resultat']['resa'];
-            scoreB = array['resultat']['resb'] == "F0" ? 0 : array['resultat']['resb'];
+            scoreA = array.resultat.resa == "F0" ? 0 : array.resultat.resa;
+            scoreB = array.resultat.resb == "F0" ? 0 : array.resultat.resb;
         }
 
         let expected = this.getExpectedPoints(parties, joueursAFormatted, joueursBFormatted);
         let rencontre: RencontreDetails = {
-            array['resultat']['equa'],
-            array['resultat']['equb'],
+            array.resultat.equa,
+            array.resultat.equb,
             scoreA,
             scoreB,
             joueursAFormatted,
             joueursBFormatted,
             parties,
-            expected['expectedA'],
-            expected['expectedB']
+            expected.expectedA,
+            expected.expectedB
         }
 
         return rencontre;
@@ -132,10 +132,10 @@ export class RencontreDetailsFactory
     {
         let joueursClub = this.api.getJoueursByClub(playerClubId);
 
-        let joueurs = [];
+        let joueurs: [] = [];
         data.forEach((joueurData: any) => {
             let nomPrenom = joueurData[0];
-            [nom, prenom] = Utils::returnNomPrenom(nomPrenom);
+            [nom, prenom] = Utils.returnNomPrenom(nomPrenom);
             joueurs[nomPrenom] = this.formatJoueur(prenom, nom, joueurData[1], joueursClub);
         })
         return joueurs;
@@ -148,28 +148,26 @@ export class RencontreDetailsFactory
      * @param array joueursClub
      * @return Joueur
      */
-    private formatJoueur(string prenom, string nom, string points, array joueursClub): Joueur
+    private formatJoueur(prenom: string, nom: string, points: string, joueursClub: Joueur[]): Joueur
     {
         if (nom === "" && prenom === "Absent") {
             return new Joueur(nom, prenom, "", null, null);
         }
 
         try {
-            foreach (joueursClub as joueurClub) {
-                if (joueurClub.getNom() === Accentuation::remove(nom) && joueurClub.getPrenom() === prenom) {
+            joueursClub.forEach((joueurClub: Joueur) => {
+                if (joueurClub.nom === Accentuation.remove(nom) && joueurClub.prenom === prenom) {
 
-                    return = preg_match('/[0-9/', points, result);
-
-                    if (return === false) {
-                        throw new \RuntimeException(
-                            sprintf(
-                                "Not able to extract sexe and points in '%s'",
-                                points
-                            )
-                        );
+                    if (!preg_match('/[0-9/', points, result)) {
+                        // throw new \RuntimeException(
+                        //     sprintf(
+                        //         "Not able to extract sexe and points in '%s'",
+                        //         points
+                        //     )
+                        // );
                     }
-                    sexe = result['sexe'];
-                    playerPoints = result['points'];
+                    let sexe = result.sexe;
+                    let playerPoints = result.points;
 
                     return new Joueur(
                         joueurClub.nom,
@@ -179,10 +177,9 @@ export class RencontreDetailsFactory
                         sexe
                     );
                 }
-            }
+            })
 
-        } catch (NoFFTTResponseException e) {
-        }
+        } catch (NoFFTTResponseException e) {}
 
         return new Joueur(nom, prenom, "", null, null);
     }
@@ -195,16 +192,17 @@ export class RencontreDetailsFactory
     private getParties(data: []): Partie[]
     {
         let parties: Partie[] = [];
-        data.forEach((partieData: any) => {
-            let setDetails = partieData['detail'].split(" ");
 
-            let partie: Partie = {
-                (typeof partieData['ja'] === 'array' && partieData['ja'].length === 0) ? 'Absent Absent' : partieData['ja'],
-                partieData['jb'] === [] ? 'Absent Absent' : partieData['jb'],
-                partieData['scorea'] === '-' ? 0 : Number(partieData['scorea']),
-                partieData['scoreb'] === '-' ? 0 : Number(partieData['scoreb']),
+        data.forEach((partieData: Partie) => {
+            let setDetails = partieData.detail.split(" ");
+
+            let partie: Partie = (
+                (typeof partieData.ja === 'array' && partieData.ja.length === 0) ? 'Absent Absent' : partieData.ja,
+                partieData.jb === [] ? 'Absent Absent' : partieData.jb,
+                partieData.scorea === '-' ? 0 : Number(partieData.scorea),
+                partieData.scoreb === '-' ? 0 : Number(partieData.scoreb),
                 setDetails
-            }
+            )
             parties.push(partie);
         })
         return parties;

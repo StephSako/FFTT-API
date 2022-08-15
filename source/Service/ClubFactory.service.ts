@@ -3,17 +3,17 @@ import { Club } from "../model/Club.interface";
 export class ClubFactory
 {
     /**
-     * @param array data
+     * @param Club[] data
      * @return Club[]
      */
-    public createFromArray(data: []): Club[]
+    public createFromArray(data: Club[]): Club[]
     {
         let result: Club[] = [];
-        data.forEach((clubData: any) => {
+        data.forEach((clubData: Club) => {
             let club: Club = {
-                clubData['numero'],
-                clubData['nom'],
-                Array.isArray(clubData['validation']) ? null : \DateTime::createFromFormat('d/m/Y', clubData['validation'])
+                clubData.numero,
+                clubData.nom,
+                Array.isArray(clubData.validation) ? null : DateTime.createFromFormat('d/m/Y', clubData.validation)
             }
             result.push(club);
         })

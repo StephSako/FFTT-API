@@ -46,7 +46,7 @@ type ObjectKeyVictory = keyof typeof VICTORY_POINTS;
 export class PointCalculator
 {
 
-    public getPointDefeat(joueurPoints: number, adversairePoints: number){
+    public getPointDefeat(joueurPoints: number, adversairePoints: number): number {
         let calculatedDiff = joueurPoints - adversairePoints;
         Object.keys(DEFEAT_POINTS).forEach((diff: string) =>{
             if (calculatedDiff <= Number(diff)){
@@ -54,9 +54,10 @@ export class PointCalculator
                 return DEFEAT_POINTS[key];
             }
         })
+        return 0;
     }
 
-    public getPointVictory(joueurPoints: number, adversairePoints: number){
+    public getPointVictory(joueurPoints: number, adversairePoints: number): number {
         let calculatedDiff = joueurPoints - adversairePoints;
         Object.keys(VICTORY_POINTS).forEach((diff: any) =>{
             let key = diff as ObjectKeyDefeat;
@@ -64,6 +65,7 @@ export class PointCalculator
                 return VICTORY_POINTS[key];
             }
         })
+        return 0;
     }
 
 }
