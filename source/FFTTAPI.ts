@@ -1,24 +1,24 @@
 import { ApiRequest } from "./controller/ApiRequest";
-import { Partie } from "./model/Partie.interface";
+import { Partie } from "./model/Partie";
 import crypto from "crypto";
-import { Organisme } from "./model/Organisme.interface";
+import { Organisme } from "./model/Organisme";
 import { ClubFactory } from "./Service/ClubFactory.service";
 import { Club } from "./model/Club.interface";
-import { ClubDetails } from "./model/ClubDetails.interface";
-import { Joueur } from "./model/Joueur.interface";
-import { JoueurDetails } from "./model/JoueurDetails.interface";
-import { Classement } from "./model/Classement.interface";
-import { Historique } from "./model/Historique.interface";
-import { UnvalidatedPartie } from "./model/UnvalidatedPartie.interface";
-import { Equipe } from "./model/Equipe.interface";
-import { EquipePoule } from "./model/EquipePoule.interface";
-import { Rencontre } from "./model/Rencontre/Rencontre.interface";
-import { VirtualPoints } from "./model/VirtualPoints.interface";
+import { ClubDetails } from "./model/ClubDetails";
+import { Joueur } from "./model/Joueur";
+import { JoueurDetails } from "./model/JoueurDetails";
+import { Classement } from "./model/Classement";
+import { Historique } from "./model/Historique";
+import { UnvalidatedPartie } from "./model/UnvalidatedPartie";
+import { Equipe } from "./model/Equipe";
+import { EquipePoule } from "./model/EquipePoule";
+import { Rencontre } from "./model/Rencontre/Rencontre";
+import { VirtualPoints } from "./model/VirtualPoints";
 import { PointCalculator } from "./Service/PointCalculator.service";
 import { Utils } from "./Service/Utils.service";
 import { RencontreDetails } from "./model/Rencontre/RencontreDetails.interface";
 import { RencontreDetailsFactory } from "./Service/RencontreDetailsFactory.service";
-import { Actualite } from "./model/Actualite.interface";
+import { Actualite } from "./model/Actualite";
 import { OrganismeRaw } from "./model/Raw/OrganismeRaw.interface";
 import { ClubDetailsRaw } from "./model/Raw/ClubDetailsRaw.interface";
 import { JoueurRaw } from "./model/Raw/JoueurRaw.interface";
@@ -30,6 +30,7 @@ import { PartieRaw } from "./model/Raw/PartieRaw.interface";
 import { RencontreRaw } from "./model/Raw/RencontreRaw.interface";
 import { ParamsEquipe } from "./model/ParamsEquipe.interface";
 import { UnvalidatedPartieRaw } from "./model/Raw/ValidatedPartieRaw.interface";
+import { ResponseData } from "./model/ResponseData.interface";
 
 export class FFTTApi
 {
@@ -87,11 +88,10 @@ export class FFTTApi
             type = 'L';
         }
 
-        let organismes = this.apiRequest.get('xml_organisme',
-            {
-                type: type,
-            }
-        )["organisme"];
+        let organismes: OrganismeRaw[] = this.apiRequest.get('xml_organisme',
+        {
+            type: type,
+        }).organisme;
 
         let result: Organisme[] = [];
         organismes.forEach((organisme: OrganismeRaw) => {
@@ -115,7 +115,7 @@ export class FFTTApi
      */
     public getClubsByDepartement(departementId: number): Club[]
     {
-        let data = this.apiRequest.get('xml_club_dep2',
+        let data: Club[] = this.apiRequest.get('xml_club_dep2',
         {
             dep: departementId,
         }).club;
@@ -131,12 +131,11 @@ export class FFTTApi
     public getClubsByName(name: string): Club[]
     {
         try {
-            let data = this.apiRequest.get('xml_club_b',
+            let data: Club[] = this.apiRequest.get('xml_club_b',
             {
                 ville: name,
             }).club;
-
-            data = this.wrappedArrayIfUnique(data);
+            data = Utils.wrappedArrayIfUnique(data);
 
             let clubFactory = new ClubFactory();
             return clubFactory.createFromArray(data);
@@ -227,14 +226,13 @@ export class FFTTApi
      */
     public getJoueursByNom(nom: string, prenom: string = ""): Joueur[]
     {
-        let arrayJoueurs = this.apiRequest.get('xml_liste_joueur',
+        let arrayJoueurs: JoueurRaw[] = this.apiRequest.get('xml_liste_joueur',
         {
-            nom: addslashes(Accentuation::remove(nom)),
-            prenom: addslashes(Accentuation::remove(prenom)),
-        }
-        ).joueur;
+            nom: addslashes(Accentuation.remove(nom)),
+            prenom: addslashes(Accentuation.remove(prenom)),
+        }).joueur;
 
-        arrayJoueurs = this.wrappedArrayIfUnique(arrayJoueurs);
+        arrayJoueurs = Utils.wrappedArrayIfUnique(arrayJoueurs);
 
         let result: Joueur[] = [];
 
@@ -260,7 +258,7 @@ export class FFTTApi
      */
     public getJoueurDetailsByLicence(licenceId: string): JoueurDetails
     {
-        let data
+        let data: any;
         try {
             data = this.apiRequest.get('xml_licence_b',
             {
@@ -268,7 +266,7 @@ export class FFTTApi
             });
 
             if (!data.hasOwnProperty('licence')) throw new JoueurNotFound(licenceId);
-            data = data.licence;
+            else data = data.licence;
         } catch (e /*:NoFFTTResponseException */) {
             throw new JoueurNotFound(licenceId);
         }
@@ -331,7 +329,7 @@ export class FFTTApi
      */
     public getHistoriqueJoueurByLicence(licenceId: string): Historique[]
     {
-        let classements;
+        let classements: HistoriqueRaw[];
         try {
             classements = this.apiRequest.get('xml_histo_classement',
             {
@@ -341,12 +339,17 @@ export class FFTTApi
             throw new JoueurNotFound(licenceId);
         }
         let result: Historique[] = [];
-        classements = this.wrappedArrayIfUnique(classements);
+        classements = Utils.wrappedArrayIfUnique(classements);
 
         classements.forEach((classement: HistoriqueRaw) => {
             let splited = classement.saison.split(' ');
 
-            let historique = new Historique(splited[1], splited[3], Number(classement.phase), Number(classement.point));
+            let historique = new Historique(
+                Number(splited[1]),
+                Number(splited[3]),
+                Number(classement.phase),
+                Number(classement.point)
+            );
             result.push(historique);
         })
 
@@ -362,34 +365,34 @@ export class FFTTApi
     // TODO Les classe VO
     public getPartiesJoueurByLicence(joueurId: string): Partie[]
     {
-        let parties: Partie[];
+        let parties: PartieRaw[];
         try {
             parties = this.apiRequest.get('xml_partie_mysql',
             {
                 licence: joueurId,
             }).partie;
-            parties = this.wrappedArrayIfUnique(parties);
+            parties = Utils.wrappedArrayIfUnique(parties);
         } catch (NoFFTTResponseException e) {
             parties = [];
         }
 
         let result: Partie[] = [];
         parties.forEach((partie: PartieRaw) => {
-            // let nom, prenom;
-            // [nom, prenom] = Utils.returnNomPrenom(partie.advnompre);
-            // let realPartie = new Partie(
-            //     partie.vd === "V" ? true : false,
-            //     Number(partie.numjourn),
-            //     DateTime.createFromFormat('d/m/Y', partie.date),
-            //     Number(partie.pointres),
-            //     Number(partie.coefchamp),
-            //     partie.advlic,
-            //     partie.advsexe === 'M' ? true : false,
-            //     nom,
-            //     prenom,
-            //     Number(partie.advclaof)
-            // );
-            // result.push(realPartie);
+            let nom, prenom;
+            [nom, prenom] = Utils.returnNomPrenom(partie.advnompre);
+            let realPartie = new Partie(
+                partie.vd === "V" ? true : false,
+                Number(partie.numjourn),
+                DateTime.createFromFormat('d/m/Y', partie.date),
+                Number(partie.pointres),
+                Number(partie.coefchamp),
+                partie.advlic,
+                partie.advsexe === 'M' ? true : false,
+                nom,
+                prenom,
+                Number(partie.advclaof)
+            );
+            result.push(realPartie);
         })
 
         return result;
@@ -581,9 +584,9 @@ export class FFTTApi
 
         if (type) params.type = type;
 
-        if (this.apiRequest.get('xml_equipe', params) == []) return [];
-        let data = this.apiRequest.get('xml_equipe', params).equipe;
-        data = this.wrappedArrayIfUnique(data);
+        if (Object.keys(this.apiRequest.get('xml_equipe', params)).length === 0) return [];
+        let data: EquipeRaw[] = this.apiRequest.get('xml_equipe', params).equipe;
+        data = Utils.wrappedArrayIfUnique(data);
 
         let result: Equipe[] = [];
         data.forEach((dataEquipe: EquipeRaw) => {
@@ -610,7 +613,7 @@ export class FFTTApi
         let lastClassment = 0;
         data.forEach((equipePouleData: EquipePouleRaw) => {
 
-            if (!is_string(equipePouleData.equipe)) {
+            if (typeof equipePouleData.equipe !== 'string') {
                 break;
             }
 
@@ -654,7 +657,7 @@ export class FFTTApi
                 Number(dataRencontre.scoreb),
                 dataRencontre.lien,
                 DateTime.createFromFormat('d/m/Y', dataRencontre.dateprevue),
-                empty(dataRencontre.datereelle) ? null : DateTime::createFromFormat('d/m/Y', dataRencontre.datereelle)
+                empty(dataRencontre.datereelle) ? null : DateTime.createFromFormat('d/m/Y', dataRencontre.datereelle)
             ));
         })
         return result;
@@ -710,9 +713,9 @@ export class FFTTApi
      */
     public getDetailsRencontreByLien(lienRencontre: string, clubEquipeA: string = "", clubEquipeB: string = ""): RencontreDetails
     {
-        let data = this.apiRequest.get('xml_chp_renc', {}, lienRencontre);
+        let data: ResponseData = this.apiRequest.get('xml_chp_renc', {}, lienRencontre);
         
-        if (!(isset(data.resultat) && isset(data.joueur) && isset(data.partie))) {
+        if (!(Utils.isset(data.resultat) && Utils.isset(data.joueur) && Utils.isset(data.partie))) {
             throw new InvalidLienRencontre(lienRencontre);
         }
 
@@ -729,31 +732,19 @@ export class FFTTApi
     public getActualites(): Actualite[]
     {
         let data = this.apiRequest.get('xml_new_actu').news;
-        data = this.wrappedArrayIfUnique(data);
+        data = Utils.wrappedArrayIfUnique(data);
 
         let result: Actualite[] = [];
-        data.foreach((dataActualite: Actualite) => {
-            result[] = new Actualite(
-                DateTime::createFromFormat('Y-m-d', dataActualite.date),
+        data.forEach((dataActualite: Actualite) => {
+            result.push(new Actualite(
+                DateTime.createFromFormat('Y-m-d', dataActualite.date),
                 dataActualite.titre,
                 dataActualite.description,
                 dataActualite.url,
                 dataActualite.photo,
                 dataActualite.categorie
-            );
+            ));
         })
         return result;
-    }
-
-    /**
-     * @param array 
-     * @returns 
-     */
-    private wrappedArrayIfUnique(array: Partie[]):  Partie[]
-    {
-        if (array.length == count(array, COUNT_RECURSIVE)) {
-            return [array];
-        }
-        return array;
     }
 }

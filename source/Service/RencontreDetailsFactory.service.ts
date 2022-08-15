@@ -2,6 +2,7 @@ import { FFTTAPI } from "../FFTTAPI";
 import { Joueur } from "../model/Rencontre/Joueur.interface";
 import { Partie } from "../model/Rencontre/Partie.interface";
 import { RencontreDetails } from "../model/Rencontre/RencontreDetails.interface";
+import { Utils } from "./Utils.service";
 
 export class RencontreDetailsFactory
 {
@@ -71,14 +72,14 @@ export class RencontreDetailsFactory
             let adversaireB = partie.adversaireB;
             let joueurAPoints, joueurBPoints;
 
-            if (joueursAFormatted[adversaireA]) {
+            if (Utils.isset(joueursAFormatted[adversaireA])) {
                 let joueurA: Joueur = joueursAFormatted[adversaireA];
                 joueurAPoints = joueurA.points;
             } else {
                 joueurAPoints = 'NONE';
             }
 
-            if (joueursBFormatted[adversaireB]) {
+            if (Utils.isset(joueursBFormatted[adversaireB])) {
                 let joueurB: Joueur = joueursBFormatted[adversaireB];
                 joueurBPoints = joueurB.points;
             } else {

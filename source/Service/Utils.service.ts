@@ -1,4 +1,4 @@
-import { Equipe } from "../model/Equipe.interface";
+import { Equipe } from "../model/Equipe";
 
 export class Utils
 {
@@ -18,13 +18,13 @@ export class Utils
         ];
     }
 
-    public static formatPoints(classement: string) : string
+    public static formatPoints(classement: string) : number
     {
         let explode = classement.split("-");
         if (explode.length == 2){
             classement = explode[1];
         }
-        return classement;
+        return Number(classement);
     }
 
     public static extractNomEquipe(equipe: Equipe): string
@@ -47,4 +47,24 @@ export class Utils
         return str_replace('?', '.', mb_convert_case(\Transliterator::create('NFD; [:Nonspacing Mark:] Remove;')
             ->transliterate(word), MB_CASE_LOWER, "UTF-8"));
     }
+
+     /**
+     * @param array 
+     * @returns 
+     */
+      public static wrappedArrayIfUnique(array: any[]):  any[]
+      {
+          if (array.length == count(array, COUNT_RECURSIVE)) {
+              return [array];
+          }
+          return array;
+      }
+  
+      /**
+       * @param val 
+       * @returns 
+       */
+      public static isset(val?: any) {
+          return (val !== undefined && val !== null)
+      }
 }

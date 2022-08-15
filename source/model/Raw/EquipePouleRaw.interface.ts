@@ -1,6 +1,6 @@
 export interface EquipePouleRaw {
     clt: string;
-    equipe: string;
+    equipe: string | any;
     joue: number;
     pts: number;
     numero: string;

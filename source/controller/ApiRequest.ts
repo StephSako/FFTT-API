@@ -2,6 +2,8 @@ const FFTTURL = 'http://www.fftt.com/mobile/pxml/';
 import crypto from 'crypto';
 import axios, { AxiosResponse } from 'axios';
 import {decode} from 'html-entities';
+import { ResponseData } from '../model/ResponseData.interface';
+import { JoueurDetails } from '../model/JoueurDetails';
 
 export class ApiRequest {
     private password: string;
@@ -33,10 +35,10 @@ export class ApiRequest {
         return content;
     }
 
-    public get(request: string, params: object = {}, queryParameter: string | null = null): object
+    public get(request: string, params: object = {}, queryParameter: string | null = null): ResponseData
     {
         let chaine = this.prepare(request, params, queryParameter);
-        let result: object;
+        let result: any;
         try{
             result = this.send(chaine);
         }
