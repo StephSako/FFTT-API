@@ -20,7 +20,7 @@ export class ApiRequest {
 
     private prepare(request: string, params: any = [], queryParameter: string | null = null): string {
         const time = Date.now();
-        const timeCrypted = crypto.createHmac("sha1", this.password).update(time).digest('hex');
+        const timeCrypted = crypto.createHmac("sha1", this.password).update(time.toString()).digest('hex');
         let uri =  `${FFTTURL}${request}.php?serie${this.id}&tm=${time}&tmc=${timeCrypted}&id=${this.id}`;
         if (queryParameter){
             uri += `&${queryParameter}`;
@@ -46,12 +46,12 @@ export class ApiRequest {
     public get(request: string, params: object = {}, queryParameter: string | null = null): ResponseData
     {
         let chaine = this.prepare(request, params, queryParameter);
-        let result: any;
+        let result: ResponseData;
         try{
             result = this.send(chaine);
         }
         catch (ce/*: ClientException*/) {
-            if(ce->getResponse()->getStatusCode() === 401){
+            if (ce->getResponse()->getStatusCode() === 401){
                 throw new UnauthorizedCredentials(request, ce->getResponse()->getBody()->getContents());
             }
             throw new URIPartNotValidException(request);
@@ -60,9 +60,11 @@ export class ApiRequest {
         if(!Array.isArray(result)){
             throw new InvalidURIParametersException(request, params);
         }
+
         if(result.hasOwnProperty('0')){
             throw new NoFFTTResponseException(chaine);
         }
+        
         return result;
     }
 }

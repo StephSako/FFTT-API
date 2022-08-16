@@ -16,7 +16,7 @@ export class Rencontre {
         scoreEquipeB: number,
         lien: string,
         datePrevue: Date,
-        dateReelle: Date)
+        dateReelle: Date | null)
     {
         this.libelle = libelle;
         this.nomEquipeA = nomEquipeA;

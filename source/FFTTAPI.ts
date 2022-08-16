@@ -36,6 +36,9 @@ import { ClubNotFoundException } from "./Exception/ClubNotFoundException";
 import { JoueurNotFound } from "./Exception/JoueurNotFound";
 import { NoFFTTResponseException } from "./Exception/NoFFTTResponseException";
 import { InvalidLienRencontre } from "./Exception/InvalidLienRencontre";
+import { DynamicObj } from "./model/DynamicObj.interface";
+import { InvalidURIParametersException } from "./Exception/InvalidURIParametersException";
+import removeAccents from 'remove-accents';
 
 export class FFTTAPI
 {
@@ -44,12 +47,23 @@ export class FFTTAPI
     private apiRequest;
 
     // Premier jour de Juillet comptabilisation de la saison
-    const PREMIER_JOUR_SAISON = 9;
+    private PREMIER_JOUR_SAISON = 9;
+
     /**
      * Dates de publication des matches (on part du principe qu'il n'y aura pas de matches officiels le 30 et 31 Décembre et que la publication aura lieu le 1er Janvier ...)
      * mois => jour
      **/
-    const DATES_PUBLICATION = [1 => 1, 2 => 3, 3 => 4, 4 => 6, 5 => 4, 6 => 10, 7 => this.PREMIER_JOUR_SAISON, 10 => 4, 11 => 3];
+    private DATES_PUBLICATION: DynamicObj = {
+        1: 1,
+        2: 3,
+        3: 4,
+        4: 6,
+        5: 4,
+        6: 10,
+        7: this.PREMIER_JOUR_SAISON,
+        10: 4,
+        11: 3
+    };
 
     public constructor(id: string, password: string)
     {
@@ -61,7 +75,7 @@ export class FFTTAPI
     public initialize()
     {
         let time = Date.now();
-        let timeCrypted = crypto.createHmac("sha1", this.password).update(time).digest('hex');
+        let timeCrypted = crypto.createHmac("sha1", this.password).update(time.toString()).digest('hex');
         let uri = `https://apiv2.fftt.com/mobile/pxml/xml_initialisation.php?
             serie=${this.id}
             &tm=${time}
@@ -164,7 +178,7 @@ export class FFTTAPI
             club: clubId,
         }).club;
 
-        if (empty(clubData.numero)) {
+        if (clubData.numero) {
             throw new ClubNotFoundException(clubId);
         }
         return new ClubDetails(
@@ -233,8 +247,8 @@ export class FFTTAPI
     {
         let arrayJoueurs: JoueurRaw[] = this.apiRequest.get('xml_liste_joueur',
         {
-            nom: addslashes(Accentuation.remove(nom)),
-            prenom: addslashes(Accentuation.remove(prenom)),
+            nom: removeAccents(nom).replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0'),
+            prenom: removeAccents(prenom).replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0'),
         }).joueur;
 
         arrayJoueurs = Utils.wrappedArrayIfUnique(arrayJoueurs);
@@ -408,8 +422,8 @@ export class FFTTAPI
      */
     public isNouveauMoisVirtuel(date: Date): boolean {
         try {
-            let mois = date.getMonth() + 1;
-            let annee = date.getFullYear();
+            let mois: number = date.getMonth() + 1;
+            let annee: number = date.getFullYear();
 
             while (!this.DATES_PUBLICATION.hasOwnProperty(mois)) {
                 if (mois == 12) {
@@ -417,8 +431,8 @@ export class FFTTAPI
                     annee++;
                 } else mois++;
             }
-            return date.getTimestamp() >= (new Date(`${annee}/${mois}/${this.DATES_PUBLICATION[mois]}`)).getTimestamp();
-        } catch (e: Exception) {
+            return date.getTime() >= (new Date(`${annee}/${mois}/${this.DATES_PUBLICATION[mois]}`)).getTime();
+        } catch (e) {
             return false;
         }
     }
@@ -452,27 +466,27 @@ export class FFTTAPI
                     let found = validatedParties.filter((validatedPartie: Partie) => {
                         let datePartie = Utils.createDateFromFormat(partie.date);
                         
-                    //     return partie.date === validatedPartie.date.format("d/m/Y")
-                    //         /** Si le nom du joueur correspond bien */
-                    //         && Utils.removeAccentLowerCaseRegex(nom) === Utils.removeAccentLowerCaseRegex(validatedPartie.getAdversaireNom())
-                    //         /** Si le prénom du joueur correspond bien */
-                    //         && (
-                    //             preg_match('/' . Utils.removeAccentLowerCaseRegex(prenom) . '.*/', Utils.removeAccentLowerCaseRegex(validatedPartie.getAdversairePrenom())) or
-                    //             str_contains(Utils.removeAccentLowerCaseRegex(prenom), Utils.removeAccentLowerCaseRegex(validatedPartie.getAdversairePrenom()))
-                    //         )
-                    //         /** Si le coefficient est renseigné */
-                    //         && validatedPartie.coefficient === Number(partie.coefchamp)
-                    //         /** Si le joueur n'est pas absent */
-                    //         && !prenom.includes('Absent') && !nom.includes('Absent')
-                    //         /** Si la partie a été réalisée durant le mois dernier ou durant le mois actuel */
-                    //         && !(
-                    //             validatedPartie.getPointsObtenus() === 0.0
-                    //             && (
-                    //                 (datePartie.format('n') === (new DateTime()).format('n')
-                    //                     && datePartie.format('Y') === (new DateTime()).format('Y'))
-                    //                 || (`${datePartie.getmonth() + 1}/${datePartie.getFullYear()}`) === `${date('n', strtotime('-1 month'))}/${date('Y', strtotime('-1 month'))}`
-                    //             )
-                    //         );
+                        return partie.date === validatedPartie.date.format("d/m/Y")
+                            /** Si le nom du joueur correspond bien */
+                            && Utils.removeAccentLowerCaseRegex(nom) === Utils.removeAccentLowerCaseRegex(validatedPartie.adversaireNom)
+                            /** Si le prénom du joueur correspond bien */
+                            && (
+                                preg_match('/' . Utils.removeAccentLowerCaseRegex(prenom) . '.*/', Utils.removeAccentLowerCaseRegex(validatedPartie.adversairePrenom)) ||
+                                Utils.removeAccentLowerCaseRegex(prenom).includes(Utils.removeAccentLowerCaseRegex(validatedPartie.adversairePrenom))
+                            )
+                            /** Si le coefficient est renseigné */
+                            && validatedPartie.coefficient === Number(partie.coefchamp)
+                            /** Si le joueur n'est pas absent */
+                            && !prenom.includes('Absent') && !nom.includes('Absent')
+                            /** Si la partie a été réalisée durant le mois dernier ou durant le mois actuel */
+                            && !(
+                                validatedPartie.pointsObtenus === 0.0
+                                && (
+                                    (datePartie.format('n') === (new DateTime()).format('n')
+                                        && datePartie.format('Y') === (new DateTime()).format('Y'))
+                                    || (`${datePartie.getmonth() + 1}/${datePartie.getFullYear()}`) === `${date('n', strtotime('-1 month'))}/${date('Y', strtotime('-1 month'))}`
+                                )
+                            );
                     }).length;
 
                     if (found === 0) {
@@ -491,7 +505,7 @@ export class FFTTAPI
                 }
             })
             return result;
-        } catch (Exception e) {
+        } catch (e) {
             return [];
         }
     }
@@ -509,7 +523,7 @@ export class FFTTAPI
             let virtualMonthlyPointsWon = 0.0;
             let virtualMonthlyPoints = 0.0;
             let latestMonth: number | null = null;
-            let monthPoints = round(classement.points, 1);
+            let monthPoints = Utils.round(classement.points);
             let unvalidatedParties = this.getUnvalidatedPartiesJoueurByLicence(joueurId);
 
             // usort(unvalidatedParties, (UnvalidatedPartie a, UnvalidatedPartie b) {
@@ -521,7 +535,7 @@ export class FFTTAPI
                     latestMonth = unvalidatedParty.date.getMonth() + 1;
                 } else {
                     if (latestMonth != (unvalidatedParty.date.getMonth() + 1) && this.isNouveauMoisVirtuel(unvalidatedParty.date)) {
-                        monthPoints = round(classement.points + virtualMonthlyPointsWon, 1);
+                        monthPoints = Utils.round(classement.points + virtualMonthlyPointsWon);
                         latestMonth = unvalidatedParty.date.getMonth() + 1;
                     }
                 }
@@ -534,18 +548,17 @@ export class FFTTAPI
                     try {
                         let availableJoueurs = this.getJoueursByNom(unvalidatedParty.adversaireNom, unvalidatedParty.adversairePrenom);
                         availableJoueurs.forEach((availableJoueur: any) => {
-                            if (round((unvalidatedParty.adversaireClassement / 100)) == availableJoueur.points) {
+                            if (Utils.round((unvalidatedParty.adversaireClassement / 100)) == availableJoueur.points) {
                                 let classementJoueur: Classement = this.getClassementJoueurByLicence(availableJoueur.licence);
-                                adversairePoints = round(classementJoueur.points, 1);
+                                adversairePoints = Utils.round(classementJoueur.points);
                                 break;
                             }
                         })
-                    } catch (/*NoFFTTResponseException*/ e) {
-                        adversairePoints = unvalidatedParty.adversaireClassement;
+                    } catch (e) {
+                        if (e instanceof NoFFTTResponseException || e instanceof InvalidURIParametersException) {
+                            adversairePoints = unvalidatedParty.adversaireClassement;
+                         }
                     }
-                    // catch (/*InvalidURIParametersException*/ e) {
-                    //     adversairePoints = unvalidatedParty.adversaireClassement;
-                    // }
 
                     let points: number = unvalidatedParty.isVictoire
                         ? pointCalculator.getPointVictory(monthPoints, Number(adversairePoints))
@@ -662,7 +675,7 @@ export class FFTTAPI
                 Number(dataRencontre.scoreb),
                 dataRencontre.lien,
                 Utils.createDateFromFormat(dataRencontre.dateprevue),
-                empty(dataRencontre.datereelle) ? null : Utils.createDateFromFormat(dataRencontre.datereelle)
+                dataRencontre.datereelle ? null : Utils.createDateFromFormat(dataRencontre.datereelle)
             ));
         })
         return result;
@@ -698,7 +711,7 @@ export class FFTTAPI
      * @throws Exception\URIPartNotValidException
      * @throws NoFFTTResponseException
      */
-    public getClubEquipe(equipe: Equipe): ?ClubDetails
+    public getClubEquipe(equipe: Equipe): ClubDetails | null
     {
         let nomEquipe = Utils.extractClub(equipe);
         let club: Club[] = this.getClubsByName(nomEquipe);

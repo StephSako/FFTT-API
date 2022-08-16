@@ -1,15 +1,16 @@
 import { Equipe } from "../model/Equipe";
+import removeAccents from 'remove-accents';
 
 export class Utils
 {
     public static returnNomPrenom(s: string) {
         let nom: string[] = [];
         let prenom: string[] = [];
-        let words = s.split(" ");
+        let words: string[] = s.split(" ");
 
         words.forEach((word: string) =>{
-            let lastChar = substr(word, -1);
-            mb_strtolower(lastChar, "UTF-8") == lastChar ? prenom.push(word) : nom.push(word);
+            let lastChar: string = word.split('').pop() ?? '';
+            lastChar.toLowerCase() == lastChar ? prenom.push(word) : nom.push(word);
         })
 
         return [
@@ -39,13 +40,12 @@ export class Utils
     public static extractClub(equipe: Equipe): string
     {
         let nomEquipe = this.extractNomEquipe(equipe);
-        return preg_replace('/ [0-9]+/', '', nomEquipe);
+        return nomEquipe.replace(/ [0-9]+/, '');
     }
 
     public static removeAccentLowerCaseRegex(word: string): string
     {
-        return str_replace('?', '.', mb_convert_case(\Transliterator::create('NFD; [:Nonspacing Mark:] Remove;')
-            ->transliterate(word), MB_CASE_LOWER, "UTF-8"));
+        return removeAccents(word).toLowerCase().replace('?', '.');
     }
 
      /**
@@ -72,4 +72,14 @@ export class Utils
         let explodedDate: string[] = date.split('/');
         return new Date(`${explodedDate[2]}/${explodedDate[1]}/${explodedDate[0]}`);
       }
+
+      /**
+       * 
+       * @param value Arrondir un nombre flottant au dixième supérieur
+       * @returns 
+       */
+      public static round(value: any) {
+        var multiplier = Math.pow(10, 1);
+        return Math.round(value * multiplier) / multiplier;
+    }
 }
