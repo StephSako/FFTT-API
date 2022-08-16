@@ -1,9 +1,13 @@
 const FFTTURL = 'http://www.fftt.com/mobile/pxml/';
 import crypto from 'crypto';
 import axios, { AxiosResponse } from 'axios';
-import {decode} from 'html-entities';
+import { decode } from 'html-entities';
 import { ResponseData } from '../model/ResponseData.interface';
-import { JoueurDetails } from '../model/JoueurDetails';
+import xml2js from 'xml2js';
+import { InvalidURIParametersException } from '../Exception/InvalidURIParametersException';
+import { NoFFTTResponseException } from '../Exception/NoFFTTResponseException';
+import { URIPartNotValidException } from '../Exception/URIPartNotValidException';
+import { UnauthorizedCredentials } from '../Exception/UnauthorizedCredentials';
 
 export class ApiRequest {
     private password: string;
@@ -26,12 +30,16 @@ export class ApiRequest {
         return uri;
     }
 
-    public send = async(uri: string) => {
+    public send = async (uri: string) => {
         let response: AxiosResponse = await axios.get(uri);
         let content = response.data;
         content = content.replace(/&(?!#?[a-z0-9]+;)/, '&amp;');
         // content = decodeURIComponent(escape(content));
         content = decode(content);
+
+        content = xml2js.parseString(content, { mergeAttrs: true, trim : true, explicitRoot : false, explicitArray : false }, (_err: any, result: any) => {
+            return result;
+        });
         return content;
     }
 
@@ -42,11 +50,11 @@ export class ApiRequest {
         try{
             result = this.send(chaine);
         }
-        catch (ClientException ce){
-            // if(ce->getResponse()->getStatusCode() === 401){
-            //     throw new UnauthorizedCredentials(request, ce->getResponse()->getBody()->getContents());
-            // }
-            // throw new URIPartNotValidException(request);
+        catch (ce/*: ClientException*/) {
+            if(ce->getResponse()->getStatusCode() === 401){
+                throw new UnauthorizedCredentials(request, ce->getResponse()->getBody()->getContents());
+            }
+            throw new URIPartNotValidException(request);
         }
 
         if(!Array.isArray(result)){

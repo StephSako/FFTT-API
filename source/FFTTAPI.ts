@@ -31,8 +31,13 @@ import { RencontreRaw } from "./model/Raw/RencontreRaw.interface";
 import { ParamsEquipe } from "./model/ParamsEquipe.interface";
 import { UnvalidatedPartieRaw } from "./model/Raw/ValidatedPartieRaw.interface";
 import { ResponseData } from "./model/ResponseData.interface";
+import { InvalidCredidentials } from "./Exception/InvalidCredidentials";
+import { ClubNotFoundException } from "./Exception/ClubNotFoundException";
+import { JoueurNotFound } from "./Exception/JoueurNotFound";
+import { NoFFTTResponseException } from "./Exception/NoFFTTResponseException";
+import { InvalidLienRencontre } from "./Exception/InvalidLienRencontre";
 
-export class FFTTApi
+export class FFTTAPI
 {
     private id;
     private password;
@@ -302,7 +307,7 @@ export class FFTTApi
             {
                 licence: licenceId
             }).joueur;
-        } catch (NoFFTTResponseException e) {
+        } catch (e: NoFFTTResponseException) {
             throw new JoueurNotFound(licenceId);
         }
 
@@ -335,7 +340,7 @@ export class FFTTApi
             {
                 numlic: licenceId
             }).histo;
-        } catch (NoFFTTResponseException e) {
+        } catch (e: NoFFTTResponseException) {
             throw new JoueurNotFound(licenceId);
         }
         let result: Historique[] = [];
@@ -372,7 +377,7 @@ export class FFTTApi
                 licence: joueurId,
             }).partie;
             parties = Utils.wrappedArrayIfUnique(parties);
-        } catch (NoFFTTResponseException e) {
+        } catch (e: NoFFTTResponseException) {
             parties = [];
         }
 
@@ -383,7 +388,7 @@ export class FFTTApi
             let realPartie = new Partie(
                 partie.vd === "V" ? true : false,
                 Number(partie.numjourn),
-                DateTime.createFromFormat('d/m/Y', partie.date),
+                Utils.createDateFromFormat(partie.date),
                 Number(partie.pointres),
                 Number(partie.coefchamp),
                 partie.advlic,
@@ -413,7 +418,7 @@ export class FFTTApi
                 } else mois++;
             }
             return date.getTimestamp() >= (new Date(`${annee}/${mois}/${this.DATES_PUBLICATION[mois]}`)).getTimestamp();
-        } catch (Exception e) {
+        } catch (e: Exception) {
             return false;
         }
     }
@@ -433,7 +438,7 @@ export class FFTTApi
             {
                 numlic: joueurId
             }).partie ?? [];
-        } catch (NoFFTTResponseException e) {
+        } catch (e: NoFFTTResponseException) {
             allParties = [];
         }
 
@@ -445,7 +450,7 @@ export class FFTTApi
                     [nom, prenom] = Utils.returnNomPrenom(partie.nom);
 
                     let found = validatedParties.filter((validatedPartie: Partie) => {
-                        let datePartie = DateTime.createFromFormat('d/m/Y', partie.date);
+                        let datePartie = Utils.createDateFromFormat(partie.date);
                         
                     //     return partie.date === validatedPartie.date.format("d/m/Y")
                     //         /** Si le nom du joueur correspond bien */
@@ -477,7 +482,7 @@ export class FFTTApi
                             Number(partie.coefchamp),
                             partie.victoire === "V",
                             false,
-                            DateTime.createFromFormat('d/m/Y', partie.date),
+                            Utils.createDateFromFormat(partie.date),
                             nom,
                             prenom,
                             Utils.formatPoints(partie.classement)
@@ -656,8 +661,8 @@ export class FFTTApi
                 Number(dataRencontre.scorea),
                 Number(dataRencontre.scoreb),
                 dataRencontre.lien,
-                DateTime.createFromFormat('d/m/Y', dataRencontre.dateprevue),
-                empty(dataRencontre.datereelle) ? null : DateTime.createFromFormat('d/m/Y', dataRencontre.datereelle)
+                Utils.createDateFromFormat(dataRencontre.dateprevue),
+                empty(dataRencontre.datereelle) ? null : Utils.createDateFromFormat(dataRencontre.datereelle)
             ));
         })
         return result;
@@ -737,7 +742,7 @@ export class FFTTApi
         let result: Actualite[] = [];
         data.forEach((dataActualite: Actualite) => {
             result.push(new Actualite(
-                DateTime.createFromFormat('Y-m-d', dataActualite.date),
+                new Date(dataActualite.date),
                 dataActualite.titre,
                 dataActualite.description,
                 dataActualite.url,

@@ -1,5 +1,6 @@
 import { FFTTAPI } from "../FFTTAPI";
-import { Joueur } from "../model/Rencontre/Joueur.interface";
+import { DynamicObj } from "../model/DynamicObj.interface";
+import { Joueur } from "../model/Rencontre/Joueur";
 import { Partie } from "../model/Rencontre/Partie.interface";
 import { RencontreDetails } from "../model/Rencontre/RencontreDetails.interface";
 import { Utils } from "./Utils.service";
@@ -129,13 +130,14 @@ export class RencontreDetailsFactory
      * @param string playerClubId
      * @return array<string, Joueur>
      */
-    private formatJoueurs(data: any, playerClubId: string): []
+    private formatJoueurs(data: any, playerClubId: string): DynamicObj
     {
-        let joueursClub = this.api.getJoueursByClub(playerClubId);
+        let joueursClub: Joueur[] = this.api.getJoueursByClub(playerClubId);
 
-        let joueurs: [] = [];
+        let joueurs: DynamicObj = new Array();
         data.forEach((joueurData: any) => {
             let nomPrenom = joueurData[0];
+            let nom: string, prenom: string;
             [nom, prenom] = Utils.returnNomPrenom(nomPrenom);
             joueurs[nomPrenom] = this.formatJoueur(prenom, nom, joueurData[1], joueursClub);
         })
@@ -194,7 +196,7 @@ export class RencontreDetailsFactory
     {
         let parties: Partie[] = [];
 
-        data.forEach((partieData: Partie) => {
+        data.forEach((partieData: any) => {
             let setDetails = partieData.detail.split(" ");
 
             let partie: Partie = (

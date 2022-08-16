@@ -4,7 +4,7 @@ export interface RencontreRaw {
     libelle: string;
     scorea: string;
     scoreb: string;
-    dateprevue: number;
-    datereelle: number;
+    dateprevue: string;
+    datereelle: string;
     lien: string;
 }

@@ -1,9 +1,7 @@
 export class Rencontre {
     libelle: string;
     nomEquipeA: string;
-    clubEquipeA: string;
     nomEquipeB: string;
-    clubEquipeB: string;
     scoreEquipeA: number;
     scoreEquipeB: number;
     lien: string;

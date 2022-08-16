@@ -1,4 +1,4 @@
-import { Joueur } from "./Joueur.interface";
+import { Joueur } from "./Joueur";
 import { Partie } from "./Partie.interface";
 
 export interface RencontreDetails {

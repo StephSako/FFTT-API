@@ -60,11 +60,16 @@ export class Utils
           return array;
       }
   
-      /**
-       * @param val 
-       * @returns 
-       */
       public static isset(val?: any) {
           return (val !== undefined && val !== null)
+      }
+
+      /**
+       * Convertisseur de date en string au format 'd/m/Y'
+       */
+      public static createDateFromFormat(date: string): Date
+      {
+        let explodedDate: string[] = date.split('/');
+        return new Date(`${explodedDate[2]}/${explodedDate[1]}/${explodedDate[0]}`);
       }
 }
