@@ -2,13 +2,29 @@ import { FFTTAPI } from "../FFTTAPI";
 import { DynamicObj } from "../model/DynamicObj.interface";
 import { Joueur } from "../model/Rencontre/Joueur";
 import { Partie } from "../model/Rencontre/Partie.interface";
-import { RencontreDetails } from "../model/Rencontre/RencontreDetails.interface";
+import { RencontreDetails } from "../model/Rencontre/RencontreDetails";
 import { Utils } from "./Utils.service";
+import removeAccents from 'remove-accents';
+import { ClubNotFoundException } from "../Exception/ClubNotFoundException";
+
+interface Expected {
+    expectedA: number,
+    expectedB: number,
+}
+
+interface Scores {
+    scoreA: number,
+    scoreB: number,
+}
+
+interface ResultRegex {
+    sexe: string,
+    points: string,
+}
 
 export class RencontreDetailsFactory
 {
     private api: FFTTAPI;
-    const regexJoueur = /^(N.[0-9]*- ){0,1}(?<sexe>[A-Z]{1}) (?<points>[0-9]+)pts/;
 
     constructor(api: FFTTAPI) {
         this.api = api;
@@ -28,9 +44,9 @@ export class RencontreDetailsFactory
         let joueursBFormatted = this.formatJoueurs(joueursB, clubEquipeB);
 
         let parties: Partie[] = this.getParties(array.partie);
-        let scoreA, scoreB, scores: any;
+        let scoreA: number, scoreB: number, scores: any;
 
-        if (Array.isArray(array.resultat.resa === 'array')) {
+        if (Array.isArray(array.resultat.resa)) {
             scores = this.getScores(parties);
             scoreA = scores.scoreA;
             scoreB = scores.scoreB;
@@ -40,7 +56,8 @@ export class RencontreDetailsFactory
         }
 
         let expected = this.getExpectedPoints(parties, joueursAFormatted, joueursBFormatted);
-        let rencontre: RencontreDetails = {
+
+        return new RencontreDetails(
             array.resultat.equa,
             array.resultat.equb,
             scoreA,
@@ -50,9 +67,7 @@ export class RencontreDetailsFactory
             parties,
             expected.expectedA,
             expected.expectedB
-        }
-
-        return rencontre;
+        );
     }
 
     /**
@@ -61,12 +76,11 @@ export class RencontreDetailsFactory
      * @param array<string, Joueur> joueursBFormatted
      * @return array{expectedA: float, expectedB: float}
      */
-    // TODO Creer une interface pour le type de retour
     // TODO Creer une interface pour joueursAFormatted et joueursBFormatted
-    private getExpectedPoints(parties: Partie[], joueursAFormatted: any, joueursBFormatted: any): {}
+    private getExpectedPoints(parties: Partie[], joueursAFormatted: any, joueursBFormatted: any): Expected
     {
-        let expectedA = 0;
-        let expectedB = 0;
+        let expectedA: number = 0;
+        let expectedB: number = 0;
 
         parties.forEach((partie: Partie) => {
             let adversaireA = partie.adversaireA;
@@ -107,8 +121,7 @@ export class RencontreDetailsFactory
      * @param Partie[] parties
      * @return array{scoreA: int, scoreB: int}
      */
-    // TODO Creerr interface pour type de retour
-    private getScores(parties: Partie[]): {}
+    private getScores(parties: Partie[]): Scores
     {
         let scoreA = 0;
         let scoreB = 0;
@@ -159,18 +172,15 @@ export class RencontreDetailsFactory
 
         try {
             joueursClub.forEach((joueurClub: Joueur) => {
-                if (joueurClub.nom === Accentuation.remove(nom) && joueurClub.prenom === prenom) {
+                if (joueurClub.nom === removeAccents(nom) && joueurClub.prenom === prenom) {
+                    let result = points.match(/^(N.[0-9]*- )?([A-Z]{1}) ([0-9]+)pts$/)
 
-                    if (!preg_match('/[0-9/', points, result)) {
-                        // throw new \RuntimeException(
-                        //     sprintf(
-                        //         "Not able to extract sexe and points in '%s'",
-                        //         points
-                        //     )
-                        // );
+                    if (!result) {
+                        throw new ClubNotFoundException(`Not able to extract sexe and points in ${points}`)
                     }
-                    let sexe = result.sexe;
-                    let playerPoints = result.points;
+
+                    let playerPoints: number = Number(result.pop() ?? 0);
+                    let sexe: string = result.pop() ?? '';
 
                     return new Joueur(
                         joueurClub.nom,
@@ -181,8 +191,7 @@ export class RencontreDetailsFactory
                     );
                 }
             })
-
-        } catch (NoFFTTResponseException e) {}
+        } catch (e) {}
 
         return new Joueur(nom, prenom, "", null, null);
     }
@@ -200,8 +209,8 @@ export class RencontreDetailsFactory
             let setDetails = partieData.detail.split(" ");
 
             let partie: Partie = (
-                (typeof partieData.ja === 'array' && partieData.ja.length === 0) ? 'Absent Absent' : partieData.ja,
-                partieData.jb === [] ? 'Absent Absent' : partieData.jb,
+                partieData.ja ? 'Absent Absent' : partieData.ja,
+                partieData.jb ? 'Absent Absent' : partieData.jb,
                 partieData.scorea === '-' ? 0 : Number(partieData.scorea),
                 partieData.scoreb === '-' ? 0 : Number(partieData.scoreb),
                 setDetails

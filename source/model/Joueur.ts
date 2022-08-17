@@ -4,7 +4,11 @@ export class Joueur {
     club: string;
     nom: string;
     prenom: string;
-    points: string | null; /* Points du joueur ou classement si classé dans les 1000 premiers français */
+    points: number;
+    isHomme: boolean;
+    classementOfficiel?: string | null;
+    echelon: string | null;
+    place: number | null;
 
     constructor (
         licence: string,
@@ -12,7 +16,12 @@ export class Joueur {
         club: string,
         nom: string,
         prenom: string,
-        points: string | null)
+        points: number,
+        isHomme: boolean,
+        classementOfficiel: string | null,
+        place: number | null,
+        echelon: string | null
+    )
     {
         this.licence = licence;
         this.clubId = clubId;
@@ -20,5 +29,9 @@ export class Joueur {
         this.nom = nom;
         this.prenom = prenom;
         this.points = points;
+        this.isHomme = isHomme;
+        this.classementOfficiel = classementOfficiel;
+        this.place = place;
+        this.echelon = echelon;
     }
 }

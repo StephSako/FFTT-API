@@ -1,22 +1,25 @@
-import { Club } from "../model/Club.interface";
+import { Club } from "../model/Club";
+import { ClubRaw } from "../model/Raw/Clubraw.interface";
+import { Utils } from "./Utils.service";
 
 export class ClubFactory
 {
     /**
-     * @param Club[] data
+     * @param ClubRaw[] data
      * @return Club[]
      */
-    public createFromArray(data: Club[]): Club[]
+    public createClubFromArray(data: ClubRaw[]): Club[] | Club
     {
         let result: Club[] = [];
-        data.forEach((clubData: Club) => {
-            let club: Club = {
+        data.forEach((clubData: ClubRaw) => {
+            result.push(new Club(
+                Number(clubData.idclub),
+                clubData.typeclub,
                 clubData.numero,
                 clubData.nom,
-                Array.isArray(clubData.validation) ? null : DateTime.createFromFormat('d/m/Y', clubData.validation)
-            }
-            result.push(club);
+                clubData.validation ? Utils.createDateFromFormat(clubData.validation) : null
+            ));
         })
-        return result;
+        return result.length === 1 ? result[0] : result;
     }
 }

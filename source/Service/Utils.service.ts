@@ -52,16 +52,13 @@ export class Utils
      * @param array 
      * @returns 
      */
-      public static wrappedArrayIfUnique(array: any[]):  any[]
+      public static wrappedArrayIfUnique(array: any): any
       {
-          if (array.length == count(array, COUNT_RECURSIVE)) {
-              return [array];
-          }
-          return array;
+            return !Array.isArray(array) ? [array] : array;
       }
   
       public static isset(val?: any) {
-          return (val !== undefined && val !== null)
+            return (val !== undefined && val !== null)
       }
 
       /**
