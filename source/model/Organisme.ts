@@ -2,17 +2,17 @@ export class Organisme {
     libelle: string;
     id: number;
     code: string;
-    idpere: number;
+    idPere: number;
 
     constructor (
         libelle: string,
         id: number,
         code: string,
-        idpere: number)
+        idPere: number)
     {
         this.libelle = libelle;
         this.id = id;
         this.code = code;
-        this.idpere = idpere;
+        this.idPere = idPere;
     }
 }

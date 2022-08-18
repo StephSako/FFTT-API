@@ -1,6 +1,8 @@
 export class Partie {
+    idPartie: number;
+    licence: string;
     isVictoire: boolean;
-    journee: number;
+    journee: number | null;
     date: Date;
     pointsObtenus: number;
     coefficient: number;
@@ -9,10 +11,11 @@ export class Partie {
     adversaireNom: string;
     adversairePrenom: string;
     adversaireClassement: number;
+    codeChampionnat: string;
 
     constructor (
         isVictoire: boolean,
-        journee: number,
+        journee: number | null,
         date: Date,
         pointsObtenus: number,
         coefficient: number,
@@ -20,7 +23,10 @@ export class Partie {
         adversaireIsHomme: boolean,
         adversaireNom: string,
         adversairePrenom: string,
-        adversaireClassement: number
+        adversaireClassement: number,
+        licence: string,
+        idPartie: number,
+        codeChampionnat: string
     )
     {
         this.isVictoire = isVictoire;
@@ -33,5 +39,8 @@ export class Partie {
         this.adversaireNom = adversaireNom;
         this.adversairePrenom = adversairePrenom;
         this.adversaireClassement = adversaireClassement;
+        this.licence = licence;
+        this.idPartie = idPartie;
+        this.codeChampionnat = codeChampionnat;
     }
 }

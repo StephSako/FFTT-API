@@ -54,7 +54,7 @@ export class Utils
      */
       public static wrappedArrayIfUnique(array: any): any
       {
-            return !Array.isArray(array) ? [array] : array;
+            return array && !Array.isArray(array) ? [array] : array;
       }
   
       public static isset(val?: any) {

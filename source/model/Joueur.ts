@@ -4,11 +4,11 @@ export class Joueur {
     club: string;
     nom: string;
     prenom: string;
-    points: number;
-    isHomme: boolean;
+    points?: number | null;
+    isHomme?: boolean | null;
     classementOfficiel?: string | null;
-    echelon: string | null;
-    place: number | null;
+    echelon?: string | null;
+    place?: number | null;
 
     constructor (
         licence: string,
@@ -16,8 +16,8 @@ export class Joueur {
         club: string,
         nom: string,
         prenom: string,
-        points: number,
-        isHomme: boolean,
+        points: number | null,
+        isHomme: boolean | null,
         classementOfficiel: string | null,
         place: number | null,
         echelon: string | null

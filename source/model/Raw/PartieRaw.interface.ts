@@ -1,6 +1,7 @@
 export interface PartieRaw {
+    licence: string;
     vd: string;
-    numjourn: string;
+    numjourn: number | null;
     date: string;
     pointres: string;
     coefchamp: string;
