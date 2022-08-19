@@ -2,12 +2,12 @@ const FFTTURL = 'http://www.fftt.com/mobile/pxml/';
 import crypto from 'crypto';
 import axios, { AxiosResponse } from 'axios';
 import { decode } from 'html-entities';
-import { ResponseData } from '../model/ResponseData.interface';
+import { ResponseData } from './model/ResponseData.interface';
 import xml2js from 'xml2js';
-import { InvalidURIParametersException } from '../Exception/InvalidURIParametersException';
-import { NoFFTTResponseException } from '../Exception/NoFFTTResponseException';
-import { URIPartNotValidException } from '../Exception/URIPartNotValidException';
-import { UnauthorizedCredentials } from '../Exception/UnauthorizedCredentials';
+import { InvalidURIParametersException } from './Exception/InvalidURIParametersException';
+import { NoFFTTResponseException } from './Exception/NoFFTTResponseException';
+import { URIPartNotValidException } from './Exception/URIPartNotValidException';
+import { UnauthorizedCredentials } from './Exception/UnauthorizedCredentials';
 
 export class ApiRequest {
     private password: string;
@@ -20,15 +20,14 @@ export class ApiRequest {
         this.id = id;
     }
 
-    private prepare(request: string, params: any= {}, queryParameter: string | null = null): string {
+    private prepare(request: string, params: any = {}, queryParameter: string | null = null): string {
         const time = Date.now();
         const timeCrypted = crypto.createHmac("sha1", this.password).update(time.toString()).digest('hex');
-        let uri =  `${FFTTURL}${request}.php?serie${this.id}&tm=${time}&tmc=${timeCrypted}&id=${this.id}`;
-        if (queryParameter){
-            uri += `&${queryParameter}`;
-        }
-
+        let uri =  `${FFTTURL}${request}.php?serie=${this.id}&tm=${time}&tmc=${timeCrypted}&id=${this.id}`;
+        
+        if (queryParameter) uri += `&${queryParameter}`;
         Object.keys(params).forEach((key: any) => uri += `&${key}=${params[key]}`)
+        
         return uri;
     }
 
@@ -50,6 +49,7 @@ export class ApiRequest {
             .then((result: ResponseData) => {
                 // console.log(result);
     
+                // TODO
                 // if(!Array.isArray(result)){
                 //     throw new InvalidURIParametersException(request, params);
                 // }

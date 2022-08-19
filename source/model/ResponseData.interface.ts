@@ -1,11 +1,11 @@
 import { Actualite } from "./Actualite";
 import { DivisionRaw } from "./Raw/DivisionRaw.interface";
-import { EquipePouleRaw } from "./Raw/EquipePouleRaw.interface";
+import { ClassementResultEquipeRaw } from "./Raw/ClassementResultEquipeRaw";
 import { EquipeRaw } from "./Raw/EquipeRaw.interface";
 import { HistoriqueRaw } from "./Raw/HistoriqueRaw.interface";
 import { OrganismeRaw } from "./Raw/OrganismeRaw.interface";
 import { PartieRaw } from "./Raw/PartieRaw.interface";
-import { RencontreRaw } from "./Raw/RencontreRaw.interface";
+import { PouleResultEquipeRaw } from "./Raw/PouleResultEquipeRaw.interface";
 
 export interface ResponseData {
     organisme: OrganismeRaw[],
@@ -14,9 +14,10 @@ export interface ResponseData {
     histo: HistoriqueRaw[],
     partie: PartieRaw[],
     equipe: EquipeRaw[],
-    classement: EquipePouleRaw[],
-    tour: RencontreRaw[],
+    classement: ClassementResultEquipeRaw[],
+    tour: any, //RencontreRaw[] | TourResultEquipeRaw[],
     news: Actualite[],
     division: DivisionRaw[],
     resultat: any // TODO Creer une interface
+    poule: PouleResultEquipeRaw
 }

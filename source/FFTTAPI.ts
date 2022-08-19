@@ -1,4 +1,4 @@
-import { ApiRequest } from "./controller/ApiRequest";
+import { ApiRequest } from "./ApiRequest";
 import { Partie } from "./model/Partie";
 import crypto from "crypto";
 import { Organisme } from "./model/Organisme";
@@ -11,7 +11,7 @@ import { Classement } from "./model/Classement";
 import { Historique } from "./model/Historique";
 import { UnvalidatedPartie } from "./model/UnvalidatedPartie";
 import { Equipe } from "./model/Equipe";
-import { EquipePoule } from "./model/EquipePoule";
+import { ClassementResultEquipe } from "./model/ClassementResultEquipe";
 import { Rencontre } from "./model/Rencontre/Rencontre";
 import { VirtualPoints } from "./model/VirtualPoints";
 import { PointCalculator } from "./Service/PointCalculator.service";
@@ -25,7 +25,7 @@ import { JoueurRaw } from "./model/Raw/JoueurRaw.interface";
 import { ClassementRaw } from "./model/Raw/ClassementRaw.interface";
 import { HistoriqueRaw } from "./model/Raw/HistoriqueRaw.interface";
 import { EquipeRaw } from "./model/Raw/EquipeRaw.interface";
-import { EquipePouleRaw } from "./model/Raw/EquipePouleRaw.interface";
+import { ClassementResultEquipeRaw } from "./model/Raw/ClassementResultEquipeRaw";
 import { PartieRaw } from "./model/Raw/PartieRaw.interface";
 import { RencontreRaw } from "./model/Raw/RencontreRaw.interface";
 import { ParamsEquipe } from "./model/ParamsEquipe.interface";
@@ -42,6 +42,12 @@ import removeAccents from 'remove-accents';
 import { ClubRaw } from "./model/Raw/Clubraw.interface";
 import { DivisionRaw } from "./model/Raw/DivisionRaw.interface";
 import { Division } from "./model/Division";
+import { ParamsPoule } from "./model/ParamsPoule.interface";
+import { PouleResultEquipe } from "./model/PouleResultEquipe";
+import { PouleResultEquipeRaw } from "./model/Raw/PouleResultEquipeRaw.interface";
+import { TourResultEquipeRaw } from "./model/Raw/TourResultEquipeRaw.interface";
+import { TourResultEquipe } from "./model/TourResultEquipe";
+import { RencontreDetailsRaw } from "./model/Raw/RencontreDetailsRaw.interface";
 
 // TODO Number() dans les constructeurs
 export class FFTTAPI
@@ -76,26 +82,20 @@ export class FFTTAPI
         this.apiRequest = new ApiRequest(this.password, this.id);
     }
 
-    // public initialize()
-    // {
-    //     let time = Date.now();
-    //     let timeCrypted = crypto.createHmac("sha1", this.password).update(time.toString()).digest('hex');
-    //     let uri = `https://apiv2.fftt.com/mobile/pxml/xml_initialisation.php?
-    //         serie=${this.id}
-    //         &tm=${time}
-    //         &tmc=${timeCrypted}
-    //         &id=${this.id}`;
+    public initialize(): Promise<any>
+    {
+        let time = Date.now();
+        let timeCrypted = crypto.createHmac("sha1", this.password).update(time.toString()).digest('hex')
+        let uri = `https://apiv2.fftt.com/mobile/pxml/xml_initialisation.php?serie=${this.id}&tm=${time}&tmc=${timeCrypted}&id=${this.id}`;
 
-    //     this.apiRequest.send(uri).then(r => {
-    //         let response = this.apiRequest.send(uri);
-    //         return response;
-    //     }).catch(e => {
-    //         if (e.status === 401){
-    //             throw new InvalidCredidentials();
-    //         }
-    //         throw e;
-    //     })
-    // }
+        return this.apiRequest.send(uri).then(r => r)
+            .catch(e => {
+                if (e.response.status === 401){
+                    throw new InvalidCredidentials();
+                }
+                throw e;
+            })
+    }
 
     /**
      * @param string type
@@ -682,41 +682,95 @@ export class FFTTAPI
         })
     }
 
-    // /**
-    //  * @param string lienDivision
-    //  * @return EquipePoule[]
-    //  * @throws Exception\InvalidURIParametersException
-    //  * @throws Exception\URIPartNotValidException
-    //  * @throws NoFFTTResponseException
-    //  */
+    /**
+     * @param string lienDivision
+     * @return EquipePoule[]
+     * @throws Exception\InvalidURIParametersException
+     * @throws Exception\URIPartNotValidException
+     * @throws NoFFTTResponseException
+     */
 
-    // // TODO Faire pour différentes 'action' possibles
-    // public getClassementPouleByLienDivision(lienDivision: string): EquipePoule[]
-    // {
-    //     let data: EquipePouleRaw[] = this.apiRequest.get('xml_result_equ', { action: 'classement' }, lienDivision).classement;
-    //     let result: EquipePoule[] = [];
-    //     let lastClassment = 0;
-    //     data.forEach((equipePouleData: EquipePouleRaw) => {
+    // TODO Faire pour différentes 'action' possibles
+    public getClassementPouleByLienDivision(d1: number, action: string | null, cx_poule?: number | null, lienDivision?: string | null)
+    : Promise<ClassementResultEquipe[] | PouleResultEquipe | TourResultEquipe[]>
+    {
+        let params: ParamsPoule = {
+            D1: d1
+        }
+        if (action) params.action = action;
+        if (cx_poule) params.cx_poule = cx_poule;
 
-    //         if (typeof equipePouleData.equipe !== 'string') {
-    //             break;
-    //         }
+        return this.apiRequest.get('xml_result_equ', params, lienDivision)
+            .then((result: ResponseData) => {
+                let resultData: any = [];
 
-    //         result.push(new EquipePoule(
-    //             equipePouleData.clt === '-' ? lastClassment : Number(equipePouleData.clt),
-    //             equipePouleData.equipe,
-    //             Number(equipePouleData.joue),
-    //             Number(equipePouleData.pts),
-    //             equipePouleData.numero,
-    //             Number(equipePouleData.totvic),
-    //             Number(equipePouleData.totdef),
-    //             Number(equipePouleData.idequipe),
-    //             equipePouleData.idclub
-    //         ));
-    //         lastClassment = equipePouleData.clt === '-' ? lastClassment : Number(equipePouleData.clt);
-    //     })
-    //     return result;
-    // }
+                switch(action) { 
+                    case 'classement': {
+                        resultData = result.classement;
+
+                        let classement: ClassementResultEquipe[] = [];
+                        let lastClassment: number = 0;
+    
+                        resultData.forEach((equipePouleData: ClassementResultEquipeRaw) => {
+            
+                            // if (typeof equipePouleData.equipe !== 'string' || !equipePouleData.equipe) break;
+                        
+                            let equipeTmp: ClassementResultEquipe = new ClassementResultEquipe(
+                                equipePouleData.clt === '-' ? lastClassment : Number(equipePouleData.clt),
+                                equipePouleData.equipe,
+                                Number(equipePouleData.joue),
+                                Number(equipePouleData.pts),
+                                equipePouleData.numero,
+                                Number(equipePouleData.totvic),
+                                Number(equipePouleData.totdef),
+                                Number(equipePouleData.idequipe),
+                                equipePouleData.idclub,
+                                Number(equipePouleData.poule),
+                                Number(equipePouleData.vic),
+                                Number(equipePouleData.def),
+                                Number(equipePouleData.nul),
+                                Number(equipePouleData.pf),
+                                Number(equipePouleData.pg),
+                                Number(equipePouleData.pp)
+                            )
+    
+                            classement.push(equipeTmp);
+                            lastClassment = equipePouleData.clt === '-' ? lastClassment : Number(equipePouleData.clt);
+                        })
+                        return classement;
+                    }
+                    case 'poule': {
+                        resultData = result.poule;
+                        return new PouleResultEquipe(
+                            resultData.libelle,
+                            resultData.lien
+                        );
+                    }
+                    case null: {
+                        resultData = result.tour;
+
+                        let tours: TourResultEquipe[] = [];
+    
+                        resultData.forEach((tourData: TourResultEquipeRaw) => {
+                            tours.push(new TourResultEquipe(
+                                tourData.libelle,
+                                tourData.lien,
+                                tourData.equa,
+                                tourData.equb,
+                                tourData.scorea ? Number(tourData.scorea) : null,
+                                tourData.scoreb ? Number(tourData.scoreb) : null,
+                                tourData.dateprevue, // TODO Type Date
+                                tourData.datereelle // TODO Type Date
+                            ));
+                        })
+                        return tours;
+                    }
+                    default: {
+                        return [];
+                    }
+                 } 
+            })
+    }
 
     // /**
     //  * @param string lienDivision
@@ -786,27 +840,29 @@ export class FFTTAPI
     //     return club.length === 1 ? this.getClubDetails(club[0].numero) : null;
     // }
 
-    // /**
-    //  * @param string lienRencontre
-    //  * @param string clubEquipeA
-    //  * @param string clubEquipeB
-    //  * @return RencontreDetails
-    //  * @throws Exception\InvalidURIParametersException
-    //  * @throws Exception\URIPartNotValidException
-    //  * @throws InvalidLienRencontre
-    //  * @throws NoFFTTResponseException
-    //  */
-    // public getDetailsRencontreByLien(lienRencontre: string, clubEquipeA: string = "", clubEquipeB: string = ""): RencontreDetails
-    // {
-    //     let data: ResponseData = this.apiRequest.get('xml_chp_renc', {}, lienRencontre);
+    /**
+     * @param string lienRencontre
+     * @param string clubEquipeA
+     * @param string clubEquipeB
+     * @return RencontreDetails
+     * @throws Exception\InvalidURIParametersException
+     * @throws Exception\URIPartNotValidException
+     * @throws InvalidLienRencontre
+     * @throws NoFFTTResponseException
+     */
+    public getDetailsRencontreByLien(lienRencontre: string, clubEquipeA: string = "", clubEquipeB: string = ""): Promise<RencontreDetails>
+    {
+        return this.apiRequest.get('xml_chp_renc', {}, lienRencontre).then((result: ResponseData) => {
+            let detailsRencontreData: any = result;
         
-    //     if (!(Utils.isset(data.resultat) && Utils.isset(data.joueur) && Utils.isset(data.partie))) {
-    //         throw new InvalidLienRencontre(lienRencontre);
-    //     }
-
-    //     let factory = new RencontreDetailsFactory(this);
-    //     return factory.createFromArray(data, clubEquipeA, clubEquipeB);
-    // }
+            if (!(Utils.isset(detailsRencontreData.resultat) && Utils.isset(detailsRencontreData.joueur) && Utils.isset(detailsRencontreData.partie))) {
+                throw new InvalidLienRencontre(lienRencontre);
+            }
+    
+            let factory = new RencontreDetailsFactory(this);
+            return factory.createFromArray(detailsRencontreData, clubEquipeA, clubEquipeB);
+        })
+    }
 
     /**
      * @return Actualite[]
@@ -818,8 +874,8 @@ export class FFTTAPI
     {
         return this.apiRequest.get('xml_new_actu').then((data: ResponseData) => {
             let actualites = Utils.wrappedArrayIfUnique(data.news);
-        
             let result: Actualite[] = [];
+            
             actualites.forEach((dataActualite: Actualite) => {
                 result.push(new Actualite(
                     new Date(dataActualite.date),
@@ -830,7 +886,6 @@ export class FFTTAPI
                     dataActualite.categorie
                 ));
             })
-            console.log(result);
             return result;
         })
     }

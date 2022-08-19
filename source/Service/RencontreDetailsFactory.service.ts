@@ -6,6 +6,7 @@ import { RencontreDetails } from "../model/Rencontre/RencontreDetails";
 import { Utils } from "./Utils.service";
 import removeAccents from 'remove-accents';
 import { ClubNotFoundException } from "../Exception/ClubNotFoundException";
+import { PartieDetailsRencontreRaw, RencontreDetailsRaw } from "../model/Raw/RencontreDetailsRaw.interface";
 
 interface Expected {
     expectedA: number,
@@ -17,11 +18,6 @@ interface Scores {
     scoreB: number,
 }
 
-interface ResultRegex {
-    sexe: string,
-    points: string,
-}
-
 export class RencontreDetailsFactory
 {
     private api: FFTTAPI;
@@ -31,11 +27,11 @@ export class RencontreDetailsFactory
     }
 
     // TODO Creer une interface pour array
-    public createFromArray(array: any, clubEquipeA: string, clubEquipeB: string): RencontreDetails
+    public createFromArray(rencontreDetails: RencontreDetailsRaw, clubEquipeA: string, clubEquipeB: string): RencontreDetails
     {
         let joueursA: any = [];
         let joueursB: any = [];
-        array.joueur.forEach((joueur: any) => {
+        rencontreDetails.joueur.forEach((joueur: any) => {
             joueursA.push([joueur.xja ?? '', joueur.xca ?? '']);
             joueursB.push([joueur.xjb ?? '', joueur.xcb ?? '']);
         })
@@ -43,23 +39,23 @@ export class RencontreDetailsFactory
         let joueursAFormatted = this.formatJoueurs(joueursA, clubEquipeA);
         let joueursBFormatted = this.formatJoueurs(joueursB, clubEquipeB);
 
-        let parties: Partie[] = this.getParties(array.partie);
+        let parties: Partie[] = this.getParties(rencontreDetails.partie);
         let scoreA: number, scoreB: number, scores: any;
 
-        if (Array.isArray(array.resultat.resa)) {
+        if (Array.isArray(rencontreDetails.resultat.resa)) {
             scores = this.getScores(parties);
             scoreA = scores.scoreA;
             scoreB = scores.scoreB;
         } else {
-            scoreA = array.resultat.resa == "F0" ? 0 : array.resultat.resa;
-            scoreB = array.resultat.resb == "F0" ? 0 : array.resultat.resb;
+            scoreA = rencontreDetails.resultat.resa == "F0" ? 0 : rencontreDetails.resultat.resa;
+            scoreB = rencontreDetails.resultat.resb == "F0" ? 0 : rencontreDetails.resultat.resb;
         }
 
         let expected = this.getExpectedPoints(parties, joueursAFormatted, joueursBFormatted);
 
         return new RencontreDetails(
-            array.resultat.equa,
-            array.resultat.equb,
+            rencontreDetails.resultat.equa,
+            rencontreDetails.resultat.equb,
             scoreA,
             scoreB,
             joueursAFormatted,
@@ -200,13 +196,12 @@ export class RencontreDetailsFactory
      * @param array data
      * @return Partie[]
      */
-    // TODO Créer une interface pour data
-    private getParties(data: []): Partie[]
+    private getParties(partieDetailsRencontre: PartieDetailsRencontreRaw[]): Partie[]
     {
         let parties: Partie[] = [];
 
-        data.forEach((partieData: any) => {
-            let setDetails = partieData.detail.split(" ");
+        partieDetailsRencontre.forEach((partieData: PartieDetailsRencontreRaw) => {
+            let setDetails: string[] = partieData.detail.split(" ");
 
             let partie: Partie = (
                 partieData.ja ? 'Absent Absent' : partieData.ja,

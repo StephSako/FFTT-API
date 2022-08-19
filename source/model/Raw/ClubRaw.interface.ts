@@ -1,5 +1,5 @@
 export interface ClubRaw {
-    idclub: number;
+    idclub: string;
     numero: string;
     nom: string;
     validation: string | null;

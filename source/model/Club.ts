@@ -2,11 +2,11 @@ export class Club {
     numero: string;
     nom: string;
     dateValidation: Date | null;
-    idClub: number;
+    idClub: string;
     typeClub: string;
 
     constructor (
-        idClub: number,
+        idClub: string,
         typeClub: string,
         numero: string,
         nom: string,

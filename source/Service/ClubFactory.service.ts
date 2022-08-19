@@ -13,7 +13,7 @@ export class ClubFactory
         let result: Club[] = [];
         data.forEach((clubData: ClubRaw) => {
             result.push(new Club(
-                Number(clubData.idclub),
+                clubData.idclub,
                 clubData.typeclub,
                 clubData.numero,
                 clubData.nom,
