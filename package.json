@@ -28,6 +28,7 @@
     "express": "^4.18.1",
     "html-entities": "^2.3.3",
     "http-build-query": "^0.7.0",
+    "moment": "^2.29.4",
     "morgan": "^1.10.0",
     "remove-accents": "^0.4.2",
     "ts-node": "^10.9.1",

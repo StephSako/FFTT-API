@@ -1,5 +1,6 @@
 import { Equipe } from "../model/Equipe";
 import removeAccents from 'remove-accents';
+import moment from "moment";
 
 export class Utils
 {
@@ -48,35 +49,57 @@ export class Utils
         return removeAccents(word).toLowerCase().replace('?', '.');
     }
 
-     /**
+    /**
      * @param array 
      * @returns 
      */
-      public static wrappedArrayIfUnique(array: any): any
-      {
-            return array && !Array.isArray(array) ? [array] : array;
-      }
-  
-      public static isset(val?: any) {
-            return (val !== undefined && val !== null)
-      }
+    public static wrappedArrayIfUnique(array: any): any
+    {
+        return array && !Array.isArray(array) ? [array] : array;
+    }
 
-      /**
-       * Convertisseur de date en string au format 'd/m/Y'
-       */
-      public static createDateFromFormat(date: string): Date
-      {
+    public static isset(val?: any) {
+        return (val !== undefined && val !== null)
+    }
+
+    /**
+     * Convertisseur d'une date en string au format 'd/m/Y'
+     */
+    public static createDate(date: string): Date
+    {
         let explodedDate: string[] = date.split('/');
         return new Date(`${explodedDate[2]}/${explodedDate[1]}/${explodedDate[0]}`);
-      }
+    }
+      
+    /**
+     * Convertisseur de date en Date au format 'd/m/Y'
+     */
+    public static createStringDateToFormat(date: Date): string
+    {
+        return `${date.getDay()}/${date.getMonth() + 1}/${date.getFullYear}`;
+    }
 
-      /**
-       * 
-       * @param value Arrondir un nombre flottant au dixième supérieur
-       * @returns 
-       */
-      public static round(value: any) {
+    /**
+     * 
+     * @param value Arrondir un nombre flottant au dixième supérieur
+     * @returns 
+     */
+    public static round(value: any) {
         var multiplier = Math.pow(10, 1);
         return Math.round(value * multiplier) / multiplier;
+    }
+
+    /**
+     * Retourne le mois précédent
+     */
+    public static getPreviousMonthsMonth() {
+        return moment(new Date()).subtract(1, 'months').month() + 1
+    }
+    
+    /**
+     * Retourne l'année du mois précédent
+     */
+    public static getPreviousMonthsYear() {
+        return moment(new Date()).subtract(1, 'months').year()
     }
 }

@@ -1,8 +1,8 @@
 export interface ResutatDetailsRencontreRaw {
     equa: string;
     equb: string;
-    resa: any[]; // TODO
-    resb: any[]; // TODO
+    resa: string; // TODO
+    resb: string; // TODO
 }
 
 export interface JoueurDetailsRencontreRaw {

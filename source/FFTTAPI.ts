@@ -48,6 +48,7 @@ import { PouleResultEquipeRaw } from "./model/Raw/PouleResultEquipeRaw.interface
 import { TourResultEquipeRaw } from "./model/Raw/TourResultEquipeRaw.interface";
 import { TourResultEquipe } from "./model/TourResultEquipe";
 import { RencontreDetailsRaw } from "./model/Raw/RencontreDetailsRaw.interface";
+import moment from "moment";
 
 // TODO Number() dans les constructeurs
 export class FFTTAPI
@@ -443,7 +444,6 @@ export class FFTTAPI
      * @throws Exception\InvalidURIParametersException
      * @throws Exception\URIPartNotValidException
      */
-    // TODO Les classe VO
     public getPartiesJoueurByLicence(joueurId: string): Promise<Partie[]>
     {
         return this.apiRequest.get('xml_partie_mysql',
@@ -459,7 +459,7 @@ export class FFTTAPI
                 parties.push(new Partie(
                     partie.vd === "V" ? true : false,
                     partie.numjourn ? Number(partie.numjourn) : null,
-                    Utils.createDateFromFormat(partie.date),
+                    Utils.createDate(partie.date),
                     Number(partie.pointres),
                     Number(partie.coefchamp),
                     partie.advlic,
@@ -499,78 +499,82 @@ export class FFTTAPI
     //     }
     // }
 
-    // /**
-    //  * @param string joueurId
-    //  * @return UnvalidatedPartie[]
-    //  * @throws InvalidURIParametersException
-    //  * @throws URIPartNotValidException
-    //  */
-    // public getUnvalidatedPartiesJoueurByLicence(joueurId: string): UnvalidatedPartie[]
-    // {
-    //     let validatedParties: Partie[] = this.getPartiesJoueurByLicence(joueurId);
-    //     let allParties: any;
-    //     try {
-    //         allParties = this.apiRequest.get('xml_partie',
-    //         {
-    //             numlic: joueurId
-    //         }).partie ?? [];
-    //     } catch (e: NoFFTTResponseException) {
-    //         allParties = [];
-    //     }
-
-    //     let result: UnvalidatedPartie[] = [];
-    //     try {
-    //         allParties.forEach((partie: UnvalidatedPartieRaw) => {
-    //             if (partie.forfait === "0") {
-    //                 let nom: string, prenom: string;
-    //                 [nom, prenom] = Utils.returnNomPrenom(partie.nom);
-
-    //                 let found = validatedParties.filter((validatedPartie: Partie) => {
-    //                     let datePartie = Utils.createDateFromFormat(partie.date);
-                        
-    //                     return partie.date === validatedPartie.date.format("d/m/Y")
-    //                         /** Si le nom du joueur correspond bien */
-    //                         && Utils.removeAccentLowerCaseRegex(nom) === Utils.removeAccentLowerCaseRegex(validatedPartie.adversaireNom)
-    //                         /** Si le prénom du joueur correspond bien */
-    //                         && (
-    //                             Utils.removeAccentLowerCaseRegex(validatedPartie.adversairePrenom).match('/' . Utils.removeAccentLowerCaseRegex(prenom) . '.*/') ||
-    //                             Utils.removeAccentLowerCaseRegex(prenom).includes(Utils.removeAccentLowerCaseRegex(validatedPartie.adversairePrenom))
-    //                         )
-    //                         /** Si le coefficient est renseigné */
-    //                         && validatedPartie.coefficient === Number(partie.coefchamp)
-    //                         /** Si le joueur n'est pas absent */
-    //                         && !prenom.includes('Absent') && !nom.includes('Absent')
-    //                         /** Si la partie a été réalisée durant le mois dernier ou durant le mois actuel */
-    //                         && !(
-    //                             validatedPartie.pointsObtenus === 0.0
-    //                             && (
-    //                                 (datePartie.getMonth() + 1 === (new Date()).getMonth() + 1
-    //                                     && datePartie.getFullYear() === (new Date()).getFullYear())
-    //                                 || (`${datePartie.getMonth() + 1}/${datePartie.getFullYear()}`) === `${date('n', strtotime('-1 month'))}/${date('Y', strtotime('-1 month'))}`
-    //                             )
-    //                         );
-    //                 }).length;
-
-    //                 if (found === 0) {
-    //                     result.push(new UnvalidatedPartie(
-    //                         partie.epreuve,
-    //                         partie.idpartie,
-    //                         Number(partie.coefchamp),
-    //                         partie.victoire === "V",
-    //                         false,
-    //                         Utils.createDateFromFormat(partie.date),
-    //                         nom,
-    //                         prenom,
-    //                         Utils.formatPoints(partie.classement)
-    //                     ));
-    //                 }
-    //             }
-    //         })
-    //         return result;
-    //     } catch (e) {
-    //         return [];
-    //     }
-    // }
+    /**
+     * @param string joueurId
+     * @return UnvalidatedPartie[]
+     * @throws InvalidURIParametersException
+     * @throws URIPartNotValidException
+     */
+    public async getUnvalidatedPartiesJoueurByLicence(joueurId: string): Promise<UnvalidatedPartie[]>
+    {
+        return this.apiRequest.get('xml_partie',
+        {
+            numlic: joueurId
+        }).then(async (result: ResponseData) => {
+            let validatedParties: Partie[] = await this.getPartiesJoueurByLicence(joueurId);
+            let allParties: any;
+            try {
+                allParties = result.partie ? result.partie : [];
+            } catch (e/*: NoFFTTResponseException*/) {
+                allParties = [];
+            }
+    
+            let unvalidatedParties: UnvalidatedPartie[] = [];
+            try {
+                allParties.forEach((partie: UnvalidatedPartieRaw) => {
+                    if (partie.forfait === "0") {
+                        let nom: string, prenom: string;
+                        [nom, prenom] = Utils.returnNomPrenom(partie.nom);
+    
+                        let found = validatedParties.filter((validatedPartie: Partie) => {
+                            let datePartie = Utils.createDate(partie.date);
+                            
+                            return partie.date === Utils.createStringDateToFormat(validatedPartie.date)
+                                /** Si le nom du joueur correspond bien */
+                                && Utils.removeAccentLowerCaseRegex(nom) === Utils.removeAccentLowerCaseRegex(validatedPartie.adversaireNom)
+                                /** Si le prénom du joueur correspond bien */
+                                && (
+                                    Utils.removeAccentLowerCaseRegex(validatedPartie.adversairePrenom).match(new RegExp(Utils.removeAccentLowerCaseRegex(prenom) + '.*')) ||
+                                    Utils.removeAccentLowerCaseRegex(prenom).includes(Utils.removeAccentLowerCaseRegex(validatedPartie.adversairePrenom))
+                                )
+                                /** Si le coefficient est renseigné */
+                                && validatedPartie.coefficient === Number(partie.coefchamp)
+                                /** Si le joueur n'est pas absent */
+                                && !prenom.includes('Absent') && !nom.includes('Absent')
+                                /** Si la partie a été réalisée durant le mois dernier ou durant le mois actuel */
+                                && !(
+                                    validatedPartie.pointsObtenus === 0.0
+                                    && (
+                                        (datePartie.getMonth() + 1 === (new Date()).getMonth() + 1
+                                            && datePartie.getFullYear() === (new Date()).getFullYear())
+                                        || (`${datePartie.getMonth() + 1}/${datePartie.getFullYear()}`) === `${Utils.getPreviousMonthsMonth()}/${Utils.getPreviousMonthsYear()}`
+                                    )
+                                );
+                        }).length;
+    
+                        if (found === 0) {
+                            unvalidatedParties.push(new UnvalidatedPartie(
+                                partie.epreuve,
+                                partie.idpartie,
+                                Number(partie.coefchamp),
+                                partie.victoire === "V",
+                                false,
+                                Utils.createDate(partie.date),
+                                nom,
+                                prenom,
+                                Utils.formatPoints(partie.classement)
+                            ));
+                        }
+                    }
+                })
+                return unvalidatedParties;
+            } catch (e) {
+                return [];
+            }
+        }).catch(e/*: NoFFTTResponseException*/ => {
+            return [];
+        })
+    }
 
     // /**
     //  * @param string joueurId
@@ -795,8 +799,8 @@ export class FFTTAPI
     //             Number(dataRencontre.scorea),
     //             Number(dataRencontre.scoreb),
     //             dataRencontre.lien,
-    //             Utils.createDateFromFormat(dataRencontre.dateprevue),
-    //             dataRencontre.datereelle ? null : Utils.createDateFromFormat(dataRencontre.datereelle)
+    //             Utils.createDate(dataRencontre.dateprevue),
+    //             dataRencontre.datereelle ? null : Utils.createDate(dataRencontre.datereelle)
     //         ));
     //     })
     //     return result;
@@ -850,19 +854,19 @@ export class FFTTAPI
      * @throws InvalidLienRencontre
      * @throws NoFFTTResponseException
      */
-    public getDetailsRencontreByLien(lienRencontre: string, clubEquipeA: string = "", clubEquipeB: string = ""): Promise<RencontreDetails>
-    {
-        return this.apiRequest.get('xml_chp_renc', {}, lienRencontre).then((result: ResponseData) => {
-            let detailsRencontreData: any = result;
+    // public getDetailsRencontreByLien(lienRencontre: string, clubEquipeA: string = "", clubEquipeB: string = ""): Promise<RencontreDetails>
+    // {
+    //     return this.apiRequest.get('xml_chp_renc', {}, lienRencontre).then((result: ResponseData) => {
+    //         let detailsRencontreData: any = result;
         
-            if (!(Utils.isset(detailsRencontreData.resultat) && Utils.isset(detailsRencontreData.joueur) && Utils.isset(detailsRencontreData.partie))) {
-                throw new InvalidLienRencontre(lienRencontre);
-            }
+    //         if (!(Utils.isset(detailsRencontreData.resultat) && Utils.isset(detailsRencontreData.joueur) && Utils.isset(detailsRencontreData.partie))) {
+    //             throw new InvalidLienRencontre(lienRencontre);
+    //         }
     
-            let factory = new RencontreDetailsFactory(this);
-            return factory.createFromArray(detailsRencontreData, clubEquipeA, clubEquipeB);
-        })
-    }
+    //         let factory = new RencontreDetailsFactory(this);
+    //         return factory.createFromArray(detailsRencontreData, clubEquipeA, clubEquipeB);
+    //     })
+    // }
 
     /**
      * @return Actualite[]
@@ -875,7 +879,7 @@ export class FFTTAPI
         return this.apiRequest.get('xml_new_actu').then((data: ResponseData) => {
             let actualites = Utils.wrappedArrayIfUnique(data.news);
             let result: Actualite[] = [];
-            
+
             actualites.forEach((dataActualite: Actualite) => {
                 result.push(new Actualite(
                     new Date(dataActualite.date),
@@ -888,5 +892,10 @@ export class FFTTAPI
             })
             return result;
         })
+    }
+
+    public async test() {
+        console.log(Utils.getPreviousMonthsMonth());
+        console.log(Utils.getPreviousMonthsYear());
     }
 }

@@ -1,5 +1,5 @@
 import { Joueur } from "./Joueur";
-import { Partie } from "./Partie.interface";
+import { Partie } from "./Partie";
 
 export class RencontreDetails {
     nomEquipeA: string;

@@ -17,7 +17,7 @@ export class ClubFactory
                 clubData.typeclub,
                 clubData.numero,
                 clubData.nom,
-                clubData.validation ? Utils.createDateFromFormat(clubData.validation) : null
+                clubData.validation ? Utils.createDate(clubData.validation) : null
             ));
         })
         return result.length === 1 ? result[0] : result;

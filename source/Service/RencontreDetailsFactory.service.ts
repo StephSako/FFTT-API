@@ -1,7 +1,7 @@
 import { FFTTAPI } from "../FFTTAPI";
 import { DynamicObj } from "../model/DynamicObj.interface";
 import { Joueur } from "../model/Rencontre/Joueur";
-import { Partie } from "../model/Rencontre/Partie.interface";
+import { Partie } from "../model/Rencontre/Partie";
 import { RencontreDetails } from "../model/Rencontre/RencontreDetails";
 import { Utils } from "./Utils.service";
 import removeAccents from 'remove-accents';
@@ -26,14 +26,13 @@ export class RencontreDetailsFactory
         this.api = api;
     }
 
-    // TODO Creer une interface pour array
     public createFromArray(rencontreDetails: RencontreDetailsRaw, clubEquipeA: string, clubEquipeB: string): RencontreDetails
     {
         let joueursA: any = [];
         let joueursB: any = [];
         rencontreDetails.joueur.forEach((joueur: any) => {
-            joueursA.push([joueur.xja ?? '', joueur.xca ?? '']);
-            joueursB.push([joueur.xjb ?? '', joueur.xcb ?? '']);
+            joueursA.push([joueur.xja ?? '', joueur.xca ?? '']); // TODO Check ??
+            joueursB.push([joueur.xjb ?? '', joueur.xcb ?? '']); // TODO Check ??
         })
 
         let joueursAFormatted = this.formatJoueurs(joueursA, clubEquipeA);
@@ -47,8 +46,8 @@ export class RencontreDetailsFactory
             scoreA = scores.scoreA;
             scoreB = scores.scoreB;
         } else {
-            scoreA = rencontreDetails.resultat.resa == "F0" ? 0 : rencontreDetails.resultat.resa;
-            scoreB = rencontreDetails.resultat.resb == "F0" ? 0 : rencontreDetails.resultat.resb;
+            scoreA = rencontreDetails.resultat.resa === "F0" ? 0 : Number(rencontreDetails.resultat.resa);
+            scoreB = rencontreDetails.resultat.resb === "F0" ? 0 : Number(rencontreDetails.resultat.resb);
         }
 
         let expected = this.getExpectedPoints(parties, joueursAFormatted, joueursBFormatted);
@@ -81,7 +80,7 @@ export class RencontreDetailsFactory
         parties.forEach((partie: Partie) => {
             let adversaireA = partie.adversaireA;
             let adversaireB = partie.adversaireB;
-            let joueurAPoints, joueurBPoints;
+            let joueurAPoints: string | number | null, joueurBPoints: string | number | null;
 
             if (Utils.isset(joueursAFormatted[adversaireA])) {
                 let joueurA: Joueur = joueursAFormatted[adversaireA];
@@ -139,18 +138,20 @@ export class RencontreDetailsFactory
      * @param string playerClubId
      * @return array<string, Joueur>
      */
-    private formatJoueurs(data: any, playerClubId: string): DynamicObj
+    private formatJoueurs(data: any, playerClubId: string): Promise<DynamicObj[]>
     {
-        let joueursClub: Joueur[] = this.api.getJoueursByClub(playerClubId);
+        return this.api.getJoueursByClub(playerClubId).then((result: Joueur[]) => {
+            let joueursClub: Joueur[] = result;
 
-        let joueurs: DynamicObj = new Array();
-        data.forEach((joueurData: any) => {
-            let nomPrenom = joueurData[0];
-            let nom: string, prenom: string;
-            [nom, prenom] = Utils.returnNomPrenom(nomPrenom);
-            joueurs[nomPrenom] = this.formatJoueur(prenom, nom, joueurData[1], joueursClub);
+            let joueurs: DynamicObj[] = [];
+            data.forEach((joueurData: any) => {
+                let nomPrenom = joueurData[0];
+                let nom: string, prenom: string;
+                [nom, prenom] = Utils.returnNomPrenom(nomPrenom);
+                joueurs[nomPrenom] = this.formatJoueur(prenom, nom, joueurData[1], joueursClub);
+            })
+            return joueurs;
         })
-        return joueurs;
     }
 
     /**
@@ -203,14 +204,13 @@ export class RencontreDetailsFactory
         partieDetailsRencontre.forEach((partieData: PartieDetailsRencontreRaw) => {
             let setDetails: string[] = partieData.detail.split(" ");
 
-            let partie: Partie = (
+            parties.push(new Partie(
                 partieData.ja ? 'Absent Absent' : partieData.ja,
                 partieData.jb ? 'Absent Absent' : partieData.jb,
                 partieData.scorea === '-' ? 0 : Number(partieData.scorea),
                 partieData.scoreb === '-' ? 0 : Number(partieData.scoreb),
                 setDetails
-            )
-            parties.push(partie);
+            ));
         })
         return parties;
     }
