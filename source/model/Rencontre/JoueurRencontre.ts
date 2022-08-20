@@ -1,4 +1,4 @@
-export class Joueur {
+export class JoueurRencontre {
     nom: string;
     prenom: string;
     points: number | null;

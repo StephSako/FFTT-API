@@ -1,4 +1,4 @@
-export class Partie {
+export class PartieRencontre {
     adversaireA: string;
     adversaireB: string;
     scoreA: number;

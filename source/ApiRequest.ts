@@ -62,6 +62,8 @@ export class ApiRequest {
                 return result;
             })
             .catch(e => {
+                // console.error(e.message);
+                
                 if (e.status === 401){
                     xml2js.parseString(e.data, this.xml2jsOptions, (_err, result) => {
                         throw new UnauthorizedCredentials(request, result.erreur);

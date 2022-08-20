@@ -38,12 +38,6 @@ export class Utils
         return equipe.libelle;
     }
 
-    public static extractClub(equipe: Equipe): string
-    {
-        let nomEquipe = this.extractNomEquipe(equipe);
-        return nomEquipe.replace(/ [0-9]+/, '');
-    }
-
     public static removeAccentLowerCaseRegex(word: string): string
     {
         return removeAccents(word).toLowerCase().replace('?', '.');

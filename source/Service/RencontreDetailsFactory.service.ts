@@ -1,7 +1,8 @@
 import { FFTTAPI } from "../FFTTAPI";
 import { DynamicObj } from "../model/DynamicObj.interface";
-import { Joueur } from "../model/Rencontre/Joueur";
-import { Partie } from "../model/Rencontre/Partie";
+import { JoueurRencontre } from "../model/Rencontre/JoueurRencontre";
+import { Joueur } from "../model/Joueur";
+import { PartieRencontre } from "../model/Rencontre/PartieRencontre";
 import { RencontreDetails } from "../model/Rencontre/RencontreDetails";
 import { Utils } from "./Utils.service";
 import removeAccents from 'remove-accents';
@@ -26,19 +27,22 @@ export class RencontreDetailsFactory
         this.api = api;
     }
 
-    public createFromArray(rencontreDetails: RencontreDetailsRaw, clubEquipeA: string, clubEquipeB: string): RencontreDetails
+    public async createFromArray(rencontreDetails: RencontreDetailsRaw, clubEquipeA: string, clubEquipeB: string): Promise<RencontreDetails>
     {
-        let joueursA: any = [];
-        let joueursB: any = [];
+        rencontreDetails.joueur = rencontreDetails.joueur ? rencontreDetails.joueur : [];
+        rencontreDetails.partie = rencontreDetails.partie ? rencontreDetails.partie : [];
+        
+        let joueursA: any[] = [];
+        let joueursB: any[] = [];
         rencontreDetails.joueur.forEach((joueur: any) => {
             joueursA.push([joueur.xja ?? '', joueur.xca ?? '']); // TODO Check ??
             joueursB.push([joueur.xjb ?? '', joueur.xcb ?? '']); // TODO Check ??
         })
 
-        let joueursAFormatted = this.formatJoueurs(joueursA, clubEquipeA);
-        let joueursBFormatted = this.formatJoueurs(joueursB, clubEquipeB);
+        let joueursAFormatted = await this.formatJoueurs(joueursA, clubEquipeA);
+        let joueursBFormatted = await this.formatJoueurs(joueursB, clubEquipeB);
 
-        let parties: Partie[] = this.getParties(rencontreDetails.partie);
+        let parties: PartieRencontre[] = this.getParties(rencontreDetails.partie);
         let scoreA: number, scoreB: number, scores: any;
 
         if (Array.isArray(rencontreDetails.resultat.resa)) {
@@ -72,37 +76,39 @@ export class RencontreDetailsFactory
      * @return array{expectedA: float, expectedB: float}
      */
     // TODO Creer une interface pour joueursAFormatted et joueursBFormatted
-    private getExpectedPoints(parties: Partie[], joueursAFormatted: any, joueursBFormatted: any): Expected
+    private getExpectedPoints(parties: PartieRencontre[], joueursAFormatted: any, joueursBFormatted: any): Expected
     {
         let expectedA: number = 0;
         let expectedB: number = 0;
 
-        parties.forEach((partie: Partie) => {
+        parties.forEach((partie: PartieRencontre) => {
             let adversaireA = partie.adversaireA;
             let adversaireB = partie.adversaireB;
             let joueurAPoints: string | number | null, joueurBPoints: string | number | null;
 
             if (Utils.isset(joueursAFormatted[adversaireA])) {
-                let joueurA: Joueur = joueursAFormatted[adversaireA];
+                let joueurA: JoueurRencontre = joueursAFormatted[adversaireA];
                 joueurAPoints = joueurA.points;
             } else {
                 joueurAPoints = 'NONE';
             }
 
             if (Utils.isset(joueursBFormatted[adversaireB])) {
-                let joueurB: Joueur = joueursBFormatted[adversaireB];
+                let joueurB: JoueurRencontre = joueursBFormatted[adversaireB];
                 joueurBPoints = joueurB.points;
             } else {
                 joueurBPoints = 'NONE';
             }
 
-            if (joueurAPoints === joueurBPoints) {
-                expectedA += 0.5;
-                expectedB += 0.5;
-            } else if (joueurAPoints > joueurBPoints) {
-                expectedA += 1;
-            } else {
-                expectedB += 1;
+            if (joueurAPoints && joueurBPoints) {
+                if (joueurAPoints === joueurBPoints) {
+                    expectedA += 0.5;
+                    expectedB += 0.5;
+                } else if (joueurAPoints > joueurBPoints) {
+                    expectedA += 1;
+                } else {
+                    expectedB += 1;
+                }
             }
         })
 
@@ -116,17 +122,16 @@ export class RencontreDetailsFactory
      * @param Partie[] parties
      * @return array{scoreA: int, scoreB: int}
      */
-    private getScores(parties: Partie[]): Scores
+    private getScores(parties: PartieRencontre[]): Scores
     {
-        let scoreA = 0;
-        let scoreB = 0;
+        let scoreA: number = 0;
+        let scoreB: number = 0;
 
-        parties.forEach((partie: Partie) => {
+        parties.forEach((partie: PartieRencontre) => {
             scoreA += partie.scoreA;
             scoreB += partie.scoreB;
         })
 
-        // TODO Creer interface
         return {
             scoreA: scoreA,
             scoreB: scoreB,
@@ -138,17 +143,17 @@ export class RencontreDetailsFactory
      * @param string playerClubId
      * @return array<string, Joueur>
      */
-    private formatJoueurs(data: any, playerClubId: string): Promise<DynamicObj[]>
+    private formatJoueurs(data: any[], playerClubId: string): Promise<DynamicObj[]>
     {
         return this.api.getJoueursByClub(playerClubId).then((result: Joueur[]) => {
             let joueursClub: Joueur[] = result;
-
             let joueurs: DynamicObj[] = [];
-            data.forEach((joueurData: any) => {
-                let nomPrenom = joueurData[0];
+
+            data.forEach((joueur: any) => {
+                let nomPrenom = joueur[0];
                 let nom: string, prenom: string;
                 [nom, prenom] = Utils.returnNomPrenom(nomPrenom);
-                joueurs[nomPrenom] = this.formatJoueur(prenom, nom, joueurData[1], joueursClub);
+                joueurs[nomPrenom] = this.formatJoueur(prenom, nom, joueur[1], joueursClub);
             })
             return joueurs;
         })
@@ -161,10 +166,10 @@ export class RencontreDetailsFactory
      * @param array joueursClub
      * @return Joueur
      */
-    private formatJoueur(prenom: string, nom: string, points: string, joueursClub: Joueur[]): Joueur
+    private formatJoueur(prenom: string, nom: string, points: string, joueursClub: Joueur[]): JoueurRencontre
     {
         if (nom === "" && prenom === "Absent") {
-            return new Joueur(nom, prenom, "", null, null);
+            return new JoueurRencontre(nom, prenom, "", null, null);
         }
 
         try {
@@ -173,13 +178,13 @@ export class RencontreDetailsFactory
                     let result = points.match(/^(N.[0-9]*- )?([A-Z]{1}) ([0-9]+)pts$/)
 
                     if (!result) {
-                        throw new ClubNotFoundException(`Not able to extract sexe and points in ${points}`)
+                        throw new ClubNotFoundException(`impossible d'extraire le sexe et les points dans '${points}'`)
                     }
 
                     let playerPoints: number = Number(result.pop() ?? 0);
                     let sexe: string = result.pop() ?? '';
 
-                    return new Joueur(
+                    return new JoueurRencontre(
                         joueurClub.nom,
                         joueurClub.prenom,
                         joueurClub.licence,
@@ -190,21 +195,21 @@ export class RencontreDetailsFactory
             })
         } catch (e) {}
 
-        return new Joueur(nom, prenom, "", null, null);
+        return new JoueurRencontre(nom, prenom, "", null, null);
     }
 
     /**
      * @param array data
      * @return Partie[]
      */
-    private getParties(partieDetailsRencontre: PartieDetailsRencontreRaw[]): Partie[]
+    private getParties(partieDetailsRencontre: PartieDetailsRencontreRaw[]): PartieRencontre[]
     {
-        let parties: Partie[] = [];
+        let parties: PartieRencontre[] = [];
 
         partieDetailsRencontre.forEach((partieData: PartieDetailsRencontreRaw) => {
             let setDetails: string[] = partieData.detail.split(" ");
 
-            parties.push(new Partie(
+            parties.push(new PartieRencontre(
                 partieData.ja ? 'Absent Absent' : partieData.ja,
                 partieData.jb ? 'Absent Absent' : partieData.jb,
                 partieData.scorea === '-' ? 0 : Number(partieData.scorea),

@@ -48,7 +48,6 @@ import { PouleResultEquipeRaw } from "./model/Raw/PouleResultEquipeRaw.interface
 import { TourResultEquipeRaw } from "./model/Raw/TourResultEquipeRaw.interface";
 import { TourResultEquipe } from "./model/TourResultEquipe";
 import { RencontreDetailsRaw } from "./model/Raw/RencontreDetailsRaw.interface";
-import moment from "moment";
 
 // TODO Number() dans les constructeurs
 export class FFTTAPI
@@ -220,9 +219,7 @@ export class FFTTAPI
     {
         return this.apiRequest.get('xml_liste_joueur_o',
         {
-            // club: clubId,
-            prenom: 'alexis',
-            nom: 'lebrun'
+            club: clubId
         }).then((result : ResponseData) => {
             let joueursResult: JoueurRaw[]  = result.joueur;
             let joueurs: Joueur[] = [];
@@ -479,25 +476,25 @@ export class FFTTAPI
         })
     }
 
-    // /**
-    //  * Détermine si la date d'un match est hors de la plage des dates définissant les matches comme validés/comptabilisés
-    //  */
-    // public isNouveauMoisVirtuel(date: Date): boolean {
-    //     try {
-    //         let mois: number = date.getMonth() + 1;
-    //         let annee: number = date.getFullYear();
+    /**
+     * Détermine si la date d'un match est hors de la plage des dates définissant les matches comme validés/comptabilisés
+     */
+    public isNouveauMoisVirtuel(date: Date): boolean {
+        try {
+            let mois: number = date.getMonth() + 1;
+            let annee: number = date.getFullYear();
 
-    //         while (!this.DATES_PUBLICATION.hasOwnProperty(mois)) {
-    //             if (mois == 12) {
-    //                 mois = 1;
-    //                 annee++;
-    //             } else mois++;
-    //         }
-    //         return date.getTime() >= (new Date(`${annee}/${mois}/${this.DATES_PUBLICATION[mois]}`)).getTime();
-    //     } catch (e) {
-    //         return false;
-    //     }
-    // }
+            while (!this.DATES_PUBLICATION.hasOwnProperty(mois)) {
+                if (mois == 12) {
+                    mois = 1;
+                    annee++;
+                } else mois++;
+            }
+            return date.getTime() >= (new Date(`${annee}/${mois}/${this.DATES_PUBLICATION[mois]}`)).getTime();
+        } catch (e) {
+            return false;
+        }
+    }
 
     /**
      * @param string joueurId
@@ -576,81 +573,84 @@ export class FFTTAPI
         })
     }
 
-    // /**
-    //  * @param string joueurId
-    //  * @return VirtualPoints Objet contenant les points gagnés/perdus et le classement virtuel du joueur
-    //  */
-    // public getJoueurVirtualPoints(joueurId: string): VirtualPoints
-    // {
-    //     let pointCalculator = new PointCalculator();
+    /**
+     * @param string joueurId
+     * @return VirtualPoints Objet contenant les points gagnés/perdus et le classement virtuel du joueur
+     */
+    public async getJoueurVirtualPoints(joueurId: string): Promise<VirtualPoints>
+    {
+        let pointCalculator = new PointCalculator();
 
-    //     try {
-    //         let classement = this.getClassementJoueurByLicence(joueurId);
-    //         let virtualMonthlyPointsWon = 0.0;
-    //         let virtualMonthlyPoints = 0.0;
-    //         let latestMonth: number | null = null;
-    //         let monthPoints = Utils.round(classement.points);
-    //         let unvalidatedParties = this.getUnvalidatedPartiesJoueurByLicence(joueurId);
+        try {
+            let classement = await this.getClassementJoueurByLicence(joueurId);
+            let virtualMonthlyPointsWon = 0.0;
+            let virtualMonthlyPoints = 0.0;
+            let latestMonth: number | null = null;
+            let monthPoints = Utils.round(classement.points);
+            let unvalidatedParties = await this.getUnvalidatedPartiesJoueurByLicence(joueurId);
 
-    //         // usort(unvalidatedParties, (UnvalidatedPartie a, UnvalidatedPartie b) {
-    //         //     return a.getDate() >= b.getDate();
-    //         // });
+            // usort(unvalidatedParties, (UnvalidatedPartie a, UnvalidatedPartie b) {
+            //     return a.getDate() >= b.getDate();
+            // });
 
-    //         unvalidatedParties.forEach((unvalidatedParty: UnvalidatedPartie) => {
-    //             if (!latestMonth) {
-    //                 latestMonth = unvalidatedParty.date.getMonth() + 1;
-    //             } else {
-    //                 if (latestMonth != (unvalidatedParty.date.getMonth() + 1) && this.isNouveauMoisVirtuel(unvalidatedParty.date)) {
-    //                     monthPoints = Utils.round(classement.points + virtualMonthlyPointsWon);
-    //                     latestMonth = unvalidatedParty.date.getMonth() + 1;
-    //                 }
-    //             }
+            unvalidatedParties.forEach(async (unvalidatedParty: UnvalidatedPartie) => {
+                if (!latestMonth) {
+                    latestMonth = unvalidatedParty.date.getMonth() + 1;
+                } else {
+                    if (latestMonth != (unvalidatedParty.date.getMonth() + 1) && this.isNouveauMoisVirtuel(unvalidatedParty.date)) {
+                        monthPoints = Utils.round(classement.points + virtualMonthlyPointsWon);
+                        latestMonth = unvalidatedParty.date.getMonth() + 1;
+                    }
+                }
 
-    //             let coeff: number = unvalidatedParty.coefficientChampionnat;
+                let coeff: number = unvalidatedParty.coefficientChampionnat;
 
-    //             if (!unvalidatedParty.isForfait) {
-    //                 let adversairePoints: number = unvalidatedParty.adversaireClassement;
+                if (!unvalidatedParty.isForfait) {
+                    let adversairePoints: number = unvalidatedParty.adversaireClassement;
 
-    //                 try {
-    //                     let availableJoueurs = this.getJoueursByNom(unvalidatedParty.adversaireNom, unvalidatedParty.adversairePrenom);
-    //                     availableJoueurs.forEach((availableJoueur: any) => {
-    //                         if (Utils.round((unvalidatedParty.adversaireClassement / 100)) == availableJoueur.points) {
-    //                             let classementJoueur: Classement = this.getClassementJoueurByLicence(availableJoueur.licence);
-    //                             adversairePoints = Utils.round(classementJoueur.points);
-    //                             break;
-    //                         }
-    //                     })
-    //                 } catch (e) {
-    //                     if (e instanceof NoFFTTResponseException || e instanceof InvalidURIParametersException) {
-    //                         adversairePoints = unvalidatedParty.adversaireClassement;
-    //                      }
-    //                 }
+                    try {
+                        let availableJoueurs: Joueur[] = await this.getJoueursByNom(unvalidatedParty.adversaireNom, unvalidatedParty.adversairePrenom);
+                        
+                        for (const availableJoueur of availableJoueurs) {
+                            if (Utils.round((unvalidatedParty.adversaireClassement / 100)) == availableJoueur.points) {
+                                let classementJoueur: Classement = await this.getClassementJoueurByLicence(availableJoueur.licence);
+                                adversairePoints = Utils.round(classementJoueur.points);
+                                break;
+                            }
+                        }
+                    } catch (e) {
+                        if (e instanceof NoFFTTResponseException || e instanceof InvalidURIParametersException) {
+                            adversairePoints = unvalidatedParty.adversaireClassement;
+                         }
+                    }
 
-    //                 let points: number = unvalidatedParty.isVictoire
-    //                     ? pointCalculator.getPointVictory(monthPoints, Number(adversairePoints))
-    //                     : pointCalculator.getPointDefeat(monthPoints, Number(adversairePoints));
-    //                 virtualMonthlyPointsWon += points * coeff;
-    //             }
-    //         })
+                    let points: number = unvalidatedParty.isVictoire
+                        ? pointCalculator.getPointVictory(monthPoints, Number(adversairePoints))
+                        : pointCalculator.getPointDefeat(monthPoints, Number(adversairePoints));
+                    virtualMonthlyPointsWon += points * coeff;
+                }
+            })
 
-    //         virtualMonthlyPoints = monthPoints + virtualMonthlyPointsWon;
-    //         return new VirtualPoints(
-    //             virtualMonthlyPointsWon,
-    //             virtualMonthlyPoints,
-    //             virtualMonthlyPoints - classement.pointsInitials
-    //         );
-    //     } catch (/*JoueurNotFound*/ e) {
-    //         return new VirtualPoints(0.0, this.getJoueurDetailsByLicence(joueurId).pointsLicence, 0.0);
-    //     }
-    // }
+            virtualMonthlyPoints = monthPoints + virtualMonthlyPointsWon;
+            return new VirtualPoints(
+                virtualMonthlyPointsWon,
+                virtualMonthlyPoints,
+                virtualMonthlyPoints - classement.pointsInitials
+            );
+        } catch (/*JoueurNotFound*/ e) {
+            return new VirtualPoints(0.0, (await this.getJoueurDetailsByLicence(joueurId)).pointsLicence, 0.0);
+        }
+    }
 
-    // /**
-    //  * @param string joueurId
-    //  * @return number points mensuels gagnés ou perdus en fonction des points mensuels de l'adversaire
-    //  */
-    // public getVirtualPoints(joueurId: string): number {
-    //     return this.getJoueurVirtualPoints(joueurId).monthlyPointsWon;
-    // }
+    /**
+     * @param string joueurId
+     * @return number Points mensuels gagnés/perdus
+     */
+    public getVirtualPoints(joueurId: string): Promise<number> {
+        return this.getJoueurVirtualPoints(joueurId).then((pointsVirtuels: VirtualPoints) => {
+            return pointsVirtuels.monthlyPointsWon;
+        });
+    }
 
     /**
      * @param string clubId
@@ -807,41 +807,26 @@ export class FFTTAPI
     // }
 
 
-    // /**
-    //  * @param Equipe equipe
-    //  * @return Rencontre[]
-    //  * @throws Exception\InvalidURIParametersException
-    //  * @throws Exception\URIPartNotValidException
-    //  * @throws NoFFTTResponseException
-    //  */
-    // public getProchainesRencontresEquipe(equipe: Equipe): Rencontre[]
+    /**
+     * @param Equipe equipe
+     * @return Rencontre[]
+     * @throws Exception\InvalidURIParametersException
+     * @throws Exception\URIPartNotValidException
+     * @throws NoFFTTResponseException
+     */
+    // public getProchainesRencontresEquipe(equipe: Equipe): Promise<Rencontre[]>
     // {
-    //     let nomEquipe = Utils.extractNomEquipe(equipe);
-    //     let rencontres = this.getRencontrePouleByLienDivision(equipe.lienDivision);
-
-    //     let prochainesRencontres: Rencontre[] = [];
-    //     rencontres.forEach((rencontre: Rencontre) => {
-    //         if (!rencontre.dateReelle && rencontre.nomEquipeA === nomEquipe || rencontre.nomEquipeB === nomEquipe) {
-    //             prochainesRencontres.push(rencontre);
-    //         }
-    //     })
-    //     return prochainesRencontres;
-    // }
-
-    // /**
-    //  * @param Equipe equipe
-    //  * @return ClubDetails|null
-    //  * @throws ClubNotFoundException
-    //  * @throws Exception\InvalidURIParametersException
-    //  * @throws Exception\URIPartNotValidException
-    //  * @throws NoFFTTResponseException
-    //  */
-    // public getClubEquipe(equipe: Equipe): ClubDetails | null
-    // {
-    //     let nomEquipe = Utils.extractClub(equipe);
-    //     let club: Club[] = this.getClubsByName(nomEquipe);
-
-    //     return club.length === 1 ? this.getClubDetails(club[0].numero) : null;
+    //     return this.getRencontrePouleByLienDivision(equipe.lienDivision).then((result: Rencontre[]) => {
+    //         let nomEquipe: string = Utils.extractNomEquipe(equipe);
+    //         let rencontres: Rencontre[] = result;
+    //         let prochainesRencontres: Rencontre[] = [];
+    //         rencontres.forEach((rencontre: Rencontre) => {
+    //             if (!rencontre.dateReelle && rencontre.nomEquipeA === nomEquipe || rencontre.nomEquipeB === nomEquipe) {
+    //                 prochainesRencontres.push(rencontre);
+    //             }
+    //         })
+    //         return prochainesRencontres;
+    //     });
     // }
 
     /**
@@ -854,19 +839,19 @@ export class FFTTAPI
      * @throws InvalidLienRencontre
      * @throws NoFFTTResponseException
      */
-    // public getDetailsRencontreByLien(lienRencontre: string, clubEquipeA: string = "", clubEquipeB: string = ""): Promise<RencontreDetails>
-    // {
-    //     return this.apiRequest.get('xml_chp_renc', {}, lienRencontre).then((result: ResponseData) => {
-    //         let detailsRencontreData: any = result;
+    public getDetailsRencontreByLien(lienRencontre: string, idClubEquipeA: string, idClubEquipeB: string): Promise<RencontreDetails>
+    {
+        return this.apiRequest.get('xml_chp_renc', {}, lienRencontre).then((result: any) => {
+            let factory = new RencontreDetailsFactory(this);
+            let detailsRencontreData: RencontreDetailsRaw = result;
         
-    //         if (!(Utils.isset(detailsRencontreData.resultat) && Utils.isset(detailsRencontreData.joueur) && Utils.isset(detailsRencontreData.partie))) {
-    //             throw new InvalidLienRencontre(lienRencontre);
-    //         }
-    
-    //         let factory = new RencontreDetailsFactory(this);
-    //         return factory.createFromArray(detailsRencontreData, clubEquipeA, clubEquipeB);
-    //     })
-    // }
+            if (!(Utils.isset(detailsRencontreData.resultat) && Utils.isset(detailsRencontreData.joueur) && Utils.isset(detailsRencontreData.partie))) {
+                throw new InvalidLienRencontre(lienRencontre);
+            }
+            
+            return factory.createFromArray(detailsRencontreData, idClubEquipeA, idClubEquipeB);
+        })
+    }
 
     /**
      * @return Actualite[]
@@ -892,10 +877,5 @@ export class FFTTAPI
             })
             return result;
         })
-    }
-
-    public async test() {
-        console.log(Utils.getPreviousMonthsMonth());
-        console.log(Utils.getPreviousMonthsYear());
     }
 }

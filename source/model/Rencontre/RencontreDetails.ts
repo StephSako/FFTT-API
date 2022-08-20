@@ -1,14 +1,14 @@
-import { Joueur } from "./Joueur";
-import { Partie } from "./Partie";
+import { JoueurRencontre } from "./JoueurRencontre";
+import { PartieRencontre } from "./PartieRencontre";
 
 export class RencontreDetails {
     nomEquipeA: string;
     nomEquipeB: string;
     scoreEquipeA: number;
     scoreEquipeB: number;
-    joueursA: Joueur[];
-    joueursB: Joueur[];
-    parties: Partie[];
+    joueursA: JoueurRencontre[];
+    joueursB: JoueurRencontre[];
+    parties: PartieRencontre[];
     expectedScoreEquipeA: number;
     expectedScoreEquipeB: number;
 
