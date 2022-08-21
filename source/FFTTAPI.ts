@@ -706,11 +706,9 @@ export class FFTTAPI
 
         return this.apiRequest.get('xml_result_equ', params, lienDivision)
             .then((result: ResponseData) => {
-                let resultData: any = [];
-
                 switch(action) { 
                     case 'classement': {
-                        resultData = result.classement;
+                        let resultData: ClassementResultEquipeRaw[] = result.classement;
 
                         let classement: ClassementResultEquipe[] = [];
                         let lastClassment: number = 0;
@@ -744,14 +742,14 @@ export class FFTTAPI
                         return classement;
                     }
                     case 'poule': {
-                        resultData = result.poule;
+                        let resultData: PouleResultEquipeRaw = result.poule;
                         return new PouleResultEquipe(
                             resultData.libelle,
                             resultData.lien
                         );
                     }
                     case null: {
-                        resultData = result.tour;
+                        let resultData: TourResultEquipeRaw[] = result.tour;
 
                         let tours: TourResultEquipe[] = [];
     
@@ -776,35 +774,37 @@ export class FFTTAPI
             })
     }
 
-    // /**
-    //  * @param string lienDivision
-    //  * @return Rencontre[]
-    //  * @throws Exception\InvalidURIParametersException
-    //  * @throws Exception\URIPartNotValidException
-    //  * @throws NoFFTTResponseException
-    //  */
-    // public getRencontrePouleByLienDivision(lienDivision: string): Rencontre[]
-    // {
-    //     let data = this.apiRequest.get('xml_result_equ', {}, lienDivision).tour;
+    /**
+     * @param string lienDivision
+     * @return Rencontre[]
+     * @throws Exception\InvalidURIParametersException
+     * @throws Exception\URIPartNotValidException
+     * @throws NoFFTTResponseException
+     */
+    public getRencontrePouleByLienDivision(lienDivision: string): Promise<Rencontre[]>
+    {
+        return this.apiRequest.get('xml_result_equ', {}, lienDivision).then((result: ResponseData) => {
+            let rencontresData = result.tour;
+            let rencontres: Rencontre[] = [];
 
-    //     let result: Rencontre[] = [];
-    //     data.forEach((dataRencontre: RencontreRaw) => {
-    //         let equipeA = dataRencontre.equa;
-    //         let equipeB = dataRencontre.equb;
-
-    //         result.push(new Rencontre(
-    //             dataRencontre.libelle,
-    //             !equipeA ? '': equipeA,
-    //             !equipeB ? '': equipeB,
-    //             Number(dataRencontre.scorea),
-    //             Number(dataRencontre.scoreb),
-    //             dataRencontre.lien,
-    //             Utils.createDate(dataRencontre.dateprevue),
-    //             dataRencontre.datereelle ? null : Utils.createDate(dataRencontre.datereelle)
-    //         ));
-    //     })
-    //     return result;
-    // }
+            rencontresData.forEach((dataRencontre: RencontreRaw) => {
+                let equipeA = dataRencontre.equa;
+                let equipeB = dataRencontre.equb;
+    
+                rencontres.push(new Rencontre(
+                    dataRencontre.libelle,
+                    !equipeA ? '': equipeA,
+                    !equipeB ? '': equipeB,
+                    Number(dataRencontre.scorea),
+                    Number(dataRencontre.scoreb),
+                    dataRencontre.lien,
+                    Utils.createDate(dataRencontre.dateprevue),
+                    dataRencontre.datereelle ? Utils.createDate(dataRencontre.datereelle) : null
+                ));
+            })
+            return rencontres;
+        })
+    }
 
 
     /**
@@ -814,20 +814,20 @@ export class FFTTAPI
      * @throws Exception\URIPartNotValidException
      * @throws NoFFTTResponseException
      */
-    // public getProchainesRencontresEquipe(equipe: Equipe): Promise<Rencontre[]>
-    // {
-    //     return this.getRencontrePouleByLienDivision(equipe.lienDivision).then((result: Rencontre[]) => {
-    //         let nomEquipe: string = Utils.extractNomEquipe(equipe);
-    //         let rencontres: Rencontre[] = result;
-    //         let prochainesRencontres: Rencontre[] = [];
-    //         rencontres.forEach((rencontre: Rencontre) => {
-    //             if (!rencontre.dateReelle && rencontre.nomEquipeA === nomEquipe || rencontre.nomEquipeB === nomEquipe) {
-    //                 prochainesRencontres.push(rencontre);
-    //             }
-    //         })
-    //         return prochainesRencontres;
-    //     });
-    // }
+    public getProchainesRencontresEquipe(equipe: Equipe): Promise<Rencontre[]>
+    {
+        return this.getRencontrePouleByLienDivision(equipe.lienDivision).then((result: Rencontre[]) => {
+            let nomEquipe: string = Utils.extractNomEquipe(equipe);
+            let rencontres: Rencontre[] = result;
+            let prochainesRencontres: Rencontre[] = [];
+            rencontres.forEach((rencontre: Rencontre) => {
+                if (!rencontre.dateReelle && rencontre.nomEquipeA === nomEquipe || rencontre.nomEquipeB === nomEquipe) {
+                    prochainesRencontres.push(rencontre);
+                }
+            })
+            return prochainesRencontres;
+        });
+    }
 
     /**
      * @param string lienRencontre

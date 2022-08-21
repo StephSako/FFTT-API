@@ -34,7 +34,7 @@ export class ApiRequest {
     public send = async (uri: string): Promise<ResponseData> => {
         let response: AxiosResponse = await axios.get(uri);
         let content = response.data;
-        content = content.replace(/&(?!#?[a-z0-9]+;)/, '&amp;');
+        content = content.replace(/&(?!#?[a-z0-9]+;)/, '&amp;'); // TODO Régler 'n�7'
         // content = decodeURIComponent(escape(content));
         content = decode(content);
         content = await xml2js.parseStringPromise(content, this.xml2jsOptions);
@@ -62,10 +62,8 @@ export class ApiRequest {
                 return result;
             })
             .catch(e => {
-                // console.error(e.message);
-                
-                if (e.status === 401){
-                    xml2js.parseString(e.data, this.xml2jsOptions, (_err, result) => {
+                if (e.response.status === 401){
+                    xml2js.parseString(e.response.data, this.xml2jsOptions, (_err, result) => { // TODO Problème cryptage
                         throw new UnauthorizedCredentials(request, result.erreur);
                     });
                 }
