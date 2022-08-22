@@ -878,4 +878,18 @@ export class FFTTAPI
             return result;
         })
     }
+
+    test() {
+        console.log(Utils.round(0.01));
+        console.log(Utils.round(0.04));
+        console.log(Utils.round(0.05));
+        console.log(Utils.round(0.09));
+        
+        console.log(Utils.round(0.94));
+        console.log(Utils.round(0.95));
+        console.log(Utils.round(0.99));
+        console.log(Utils.round(0.959));
+        console.log(Utils.round(0.999));
+        
+    }
 }

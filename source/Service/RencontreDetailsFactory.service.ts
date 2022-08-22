@@ -181,8 +181,8 @@ export class RencontreDetailsFactory
                         throw new ClubNotFoundException(`impossible d'extraire le sexe et les points dans '${points}'`)
                     }
 
-                    let playerPoints: number = Number(result.pop() ?? 0);
-                    let sexe: string = result.pop() ?? '';
+                    let playerPoints: number = Number(result.pop() ?? 0); // TODO .slice(-1) ?
+                    let sexe: string = result.pop() ?? ''; // TODO .slice(-1) ?
 
                     return new JoueurRencontre(
                         joueurClub.nom,
