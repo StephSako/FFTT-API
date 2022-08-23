@@ -579,8 +579,6 @@ export class FFTTAPI
      */
     public async getJoueurVirtualPoints(joueurId: string): Promise<VirtualPoints>
     {
-        let pointCalculator = new PointCalculator();
-
         try {
             let classement = await this.getClassementJoueurByLicence(joueurId);
             let virtualMonthlyPointsWon = 0.0;
@@ -625,8 +623,8 @@ export class FFTTAPI
                     }
 
                     let points: number = unvalidatedParty.isVictoire
-                        ? pointCalculator.getPointVictory(monthPoints, Number(adversairePoints))
-                        : pointCalculator.getPointDefeat(monthPoints, Number(adversairePoints));
+                        ? PointCalculator.getPointVictory(monthPoints, Number(adversairePoints))
+                        : PointCalculator.getPointDefeat(monthPoints, Number(adversairePoints));
                     virtualMonthlyPointsWon += points * coeff;
                 }
             })

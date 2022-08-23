@@ -1,43 +1,42 @@
 const VICTORY_POINTS = {
     '-500': 40,
-    '-400': 28,
-    '-300': 22,
-    '-200': 17,
-    '-150': 13,
-    '-100': 10,
-    '-50': 8,
-    '-25': 7,
-    '0': 6,
-    '25': 6,
-    '50': 5.5,
-    '100': 5,
-    '150': 4,
-    '200': 3,
-    '300': 2,
-    '400': 1,
-    '500': 0.5,
-    '20000': 0
+    '-401': 28,
+    '-310': 22,
+    '-201': 17,
+    '-151': 13,
+    '-101': 10,
+    '-51': 8,
+    '-26': 7,
+    '-1': 6,
+    '24': 6,
+    '49': 5.5,
+    '99': 5,
+    '149': 4,
+    '199': 3,
+    '299': 2,
+    '399': 1,
+    '499': 0.5,
+    '500': 0
 }
 
 const DEFEAT_POINTS = {
-    '-500': 0,
-    '-400': 0,
-    '-300': -0.5,
-    '-200': -1,
-    '-150': -2,
-    '-100': -3,
-    '-50': -4,
-    '-25': -4.5,
-    '0': -5,
-    '25': -5,
-    '50': -6,
-    '100': -7,
-    '150': -8,
-    '200': -10,
-    '300': -12.5,
-    '400': -16,
-    '500': -20,
-    '20000': -29
+    '-401': 0,
+    '-310': -0.5,
+    '-201': -1,
+    '-151': -2,
+    '-101': -3,
+    '-51': -4,
+    '-26': -4.5,
+    '-1': -5,
+    '24': -5,
+    '49': -6,
+    '99': -7,
+    '149': -8,
+    '199': -10,
+    '299': -12.5,
+    '399': -16,
+    '499': -20,
+    '500': -29
 }
 
 type ObjectKeyDefeat = keyof typeof DEFEAT_POINTS;
@@ -45,27 +44,19 @@ type ObjectKeyVictory = keyof typeof VICTORY_POINTS;
 
 export class PointCalculator
 {
-
-    public getPointDefeat(joueurPoints: number, adversairePoints: number): number {
+    public static getPointDefeat(joueurPoints: number, adversairePoints: number): number {
         let calculatedDiff = joueurPoints - adversairePoints;
-        Object.keys(DEFEAT_POINTS).forEach((diff: string) =>{
-            if (calculatedDiff <= Number(diff)){
-                let key = diff as ObjectKeyVictory;
-                return DEFEAT_POINTS[key];
-            }
-        })
-        return 0;
+        let diffs: number[] = Object.keys(DEFEAT_POINTS).map(Number).sort((n1: number, n2: number) => Number(n1) - Number(n2));
+        let diffKeys: number[] = diffs.filter((diff: number) => calculatedDiff <= diff);
+        let diffKey = (diffKeys.length ? diffKeys[0].toString() : null) as ObjectKeyDefeat;
+        return diffKey ? DEFEAT_POINTS[diffKey] : Math.min(...Object.values(DEFEAT_POINTS));
     }
 
-    public getPointVictory(joueurPoints: number, adversairePoints: number): number {
+    public static getPointVictory(joueurPoints: number, adversairePoints: number): number {
         let calculatedDiff = joueurPoints - adversairePoints;
-        Object.keys(VICTORY_POINTS).forEach((diff: any) =>{
-            let key = diff as ObjectKeyDefeat;
-            if (calculatedDiff <= diff){
-                return VICTORY_POINTS[key];
-            }
-        })
-        return 0;
+        let diffs: number[] = Object.keys(VICTORY_POINTS).map(Number).sort((n1: number, n2: number) => Number(n1) - Number(n2));
+        let diffKeys: number[] = diffs.filter((diff: number) => calculatedDiff <= diff);
+        let diffKey = (diffKeys.length ? diffKeys[0].toString() : null) as ObjectKeyVictory;
+        return diffKey ? VICTORY_POINTS[diffKey] : Math.min(...Object.values(VICTORY_POINTS));
     }
-
 }
