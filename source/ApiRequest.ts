@@ -2,7 +2,7 @@ const FFTTURL = 'http://www.fftt.com/mobile/pxml/';
 import crypto from 'crypto';
 import axios, { AxiosResponse } from 'axios';
 import { decode } from 'html-entities';
-import { ResponseData } from './model/ResponseData.interface';
+import { ResponseData } from './Model/ResponseData.interface';
 import xml2js from 'xml2js';
 import { InvalidURIParametersException } from './Exception/InvalidURIParametersException';
 import { NoFFTTResponseException } from './Exception/NoFFTTResponseException';

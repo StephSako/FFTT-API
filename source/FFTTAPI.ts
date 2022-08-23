@@ -1,53 +1,53 @@
 import { ApiRequest } from "./ApiRequest";
-import { Partie } from "./model/Partie";
+import { Partie } from "./Model/Partie";
 import crypto from "crypto";
-import { Organisme } from "./model/Organisme";
+import { Organisme } from "./Model/Organisme";
 import { ClubFactory } from "./Service/ClubFactory.service";
-import { Club } from "./model/Club";
-import { ClubDetails } from "./model/ClubDetails";
-import { Joueur } from "./model/Joueur";
-import { JoueurClassementDetails } from "./model/JoueurClassementDetails";
-import { Classement } from "./model/Classement";
-import { Historique } from "./model/Historique";
-import { UnvalidatedPartie } from "./model/UnvalidatedPartie";
-import { Equipe } from "./model/Equipe";
-import { ClassementResultEquipe } from "./model/ClassementResultEquipe";
-import { Rencontre } from "./model/Rencontre/Rencontre";
-import { VirtualPoints } from "./model/VirtualPoints";
+import { Club } from "./Model/Club";
+import { ClubDetails } from "./Model/ClubDetails";
+import { Joueur } from "./Model/Joueur";
+import { JoueurClassementDetails } from "./Model/JoueurClassementDetails";
+import { Classement } from "./Model/Classement";
+import { Historique } from "./Model/Historique";
+import { UnvalidatedPartie } from "./Model/UnvalidatedPartie";
+import { Equipe } from "./Model/Equipe";
+import { ClassementResultEquipe } from "./Model/ClassementResultEquipe";
+import { Rencontre } from "./Model/Rencontre/Rencontre";
+import { VirtualPoints } from "./Model/VirtualPoints";
 import { PointCalculator } from "./Service/PointCalculator.service";
 import { Utils } from "./Service/Utils.service";
-import { RencontreDetails } from "./model/Rencontre/RencontreDetails";
+import { RencontreDetails } from "./Model/Rencontre/RencontreDetails";
 import { RencontreDetailsFactory } from "./Service/RencontreDetailsFactory.service";
-import { Actualite } from "./model/Actualite";
-import { OrganismeRaw } from "./model/Raw/OrganismeRaw.interface";
-import { ClubDetailsRaw } from "./model/Raw/ClubDetailsRaw.interface";
-import { JoueurRaw } from "./model/Raw/JoueurRaw.interface";
-import { ClassementRaw } from "./model/Raw/ClassementRaw.interface";
-import { HistoriqueRaw } from "./model/Raw/HistoriqueRaw.interface";
-import { EquipeRaw } from "./model/Raw/EquipeRaw.interface";
-import { ClassementResultEquipeRaw } from "./model/Raw/ClassementResultEquipeRaw";
-import { PartieRaw } from "./model/Raw/PartieRaw.interface";
-import { RencontreRaw } from "./model/Raw/RencontreRaw.interface";
-import { ParamsEquipe } from "./model/ParamsEquipe.interface";
-import { UnvalidatedPartieRaw } from "./model/Raw/ValidatedPartieRaw.interface";
-import { ResponseData } from "./model/ResponseData.interface";
+import { Actualite } from "./Model/Actualite";
+import { OrganismeRaw } from "./Model/Raw/OrganismeRaw.interface";
+import { ClubDetailsRaw } from "./Model/Raw/ClubDetailsRaw.interface";
+import { JoueurRaw } from "./Model/Raw/JoueurRaw.interface";
+import { ClassementRaw } from "./Model/Raw/ClassementRaw.interface";
+import { HistoriqueRaw } from "./Model/Raw/HistoriqueRaw.interface";
+import { EquipeRaw } from "./Model/Raw/EquipeRaw.interface";
+import { ClassementResultEquipeRaw } from "./Model/Raw/ClassementResultEquipeRaw.interface";
+import { PartieRaw } from "./Model/Raw/PartieRaw.interface";
+import { RencontreRaw } from "./Model/Raw/RencontreRaw.interface";
+import { ParamsEquipe } from "./Model/ParamsEquipe.interface";
+import { UnvalidatedPartieRaw } from "./Model/Raw/ValidatedPartieRaw.interface";
+import { ResponseData } from "./Model/ResponseData.interface";
 import { InvalidCredidentials } from "./Exception/InvalidCredidentials";
 import { ClubNotFoundException } from "./Exception/ClubNotFoundException";
 import { JoueurNotFound } from "./Exception/JoueurNotFound";
 import { NoFFTTResponseException } from "./Exception/NoFFTTResponseException";
 import { InvalidLienRencontre } from "./Exception/InvalidLienRencontre";
-import { DynamicObj } from "./model/DynamicObj.interface";
+import { DynamicObj } from "./Model/DynamicObj.interface";
 import { InvalidURIParametersException } from "./Exception/InvalidURIParametersException";
 import removeAccents from 'remove-accents';
-import { ClubRaw } from "./model/Raw/Clubraw.interface";
-import { DivisionRaw } from "./model/Raw/DivisionRaw.interface";
-import { Division } from "./model/Division";
-import { ParamsPoule } from "./model/ParamsPoule.interface";
-import { PouleResultEquipe } from "./model/PouleResultEquipe";
-import { PouleResultEquipeRaw } from "./model/Raw/PouleResultEquipeRaw.interface";
-import { TourResultEquipeRaw } from "./model/Raw/TourResultEquipeRaw.interface";
-import { TourResultEquipe } from "./model/TourResultEquipe";
-import { RencontreDetailsRaw } from "./model/Raw/RencontreDetailsRaw.interface";
+import { ClubRaw } from "./Model/Raw/ClubRaw.interface";
+import { DivisionRaw } from "./Model/Raw/DivisionRaw.interface";
+import { Division } from "./Model/Division";
+import { ParamsPoule } from "./Model/ParamsPoule.interface";
+import { PouleResultEquipe } from "./Model/PouleResultEquipe";
+import { PouleResultEquipeRaw } from "./Model/Raw/PouleResultEquipeRaw.interface";
+import { TourResultEquipeRaw } from "./Model/Raw/TourResultEquipeRaw.interface";
+import { TourResultEquipe } from "./Model/TourResultEquipe";
+import { RencontreDetailsRaw } from "./Model/Raw/RencontreDetailsRaw.interface";
 
 // TODO Number() dans les constructeurs
 export class FFTTAPI
@@ -146,8 +146,7 @@ export class FFTTAPI
             dep: departementId,
         }).then((result: ResponseData) => {
             let clubData: ClubRaw[] = result.club;
-            let clubFactory = new ClubFactory();
-            return clubFactory.createClubFromArray(clubData);
+            return ClubFactory.createClubFromArray(clubData);
         })
     }
 
@@ -163,8 +162,7 @@ export class FFTTAPI
             ville: name,
         }).then((result: ResponseData) => {
             let clubData: ClubRaw[] = Utils.wrappedArrayIfUnique(result.club);
-            let clubFactory = new ClubFactory();
-            return clubFactory.createClubFromArray(clubData);
+            return ClubFactory.createClubFromArray(clubData);
         }).catch(_e => [])
     }
 

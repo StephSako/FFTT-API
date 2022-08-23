@@ -1,5 +1,5 @@
-import { Club } from "../model/Club";
-import { ClubRaw } from "../model/Raw/Clubraw.interface";
+import { Club } from "../Model/Club";
+import { ClubRaw } from "../Model/Raw/ClubRaw.interface";
 import { Utils } from "./Utils.service";
 
 export class ClubFactory
@@ -8,7 +8,7 @@ export class ClubFactory
      * @param ClubRaw[] data
      * @return Club[]
      */
-    public createClubFromArray(data: ClubRaw[]): Club[] | Club
+    public static createClubFromArray(data: ClubRaw[]): Club[] | Club
     {
         let result: Club[] = [];
         data.forEach((clubData: ClubRaw) => {

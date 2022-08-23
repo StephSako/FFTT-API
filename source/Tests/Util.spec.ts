@@ -1,4 +1,4 @@
-import { Equipe } from "../model/Equipe";
+import { Equipe } from "../Model/Equipe";
 import { Utils } from "../Service/Utils.service"
 
 describe('Util service', () => {

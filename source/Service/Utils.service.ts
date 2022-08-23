@@ -1,4 +1,4 @@
-import { Equipe } from "../model/Equipe";
+import { Equipe } from "../Model/Equipe";
 import removeAccents from 'remove-accents';
 import moment from "moment";
 

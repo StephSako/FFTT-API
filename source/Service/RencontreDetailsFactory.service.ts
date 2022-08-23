@@ -1,13 +1,13 @@
 import { FFTTAPI } from "../FFTTAPI";
-import { DynamicObj } from "../model/DynamicObj.interface";
-import { JoueurRencontre } from "../model/Rencontre/JoueurRencontre";
-import { Joueur } from "../model/Joueur";
-import { PartieRencontre } from "../model/Rencontre/PartieRencontre";
-import { RencontreDetails } from "../model/Rencontre/RencontreDetails";
+import { DynamicObj } from "../Model/DynamicObj.interface";
+import { JoueurRencontre } from "../Model/Rencontre/JoueurRencontre";
+import { Joueur } from "../Model/Joueur";
+import { PartieRencontre } from "../Model/Rencontre/PartieRencontre";
+import { RencontreDetails } from "../Model/Rencontre/RencontreDetails";
 import { Utils } from "./Utils.service";
 import removeAccents from 'remove-accents';
 import { ClubNotFoundException } from "../Exception/ClubNotFoundException";
-import { PartieDetailsRencontreRaw, RencontreDetailsRaw } from "../model/Raw/RencontreDetailsRaw.interface";
+import { PartieDetailsRencontreRaw, RencontreDetailsRaw } from "../Model/Raw/RencontreDetailsRaw.interface";
 
 interface Expected {
     expectedA: number,

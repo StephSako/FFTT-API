@@ -1,6 +1,6 @@
 import { Actualite } from "./Actualite";
 import { DivisionRaw } from "./Raw/DivisionRaw.interface";
-import { ClassementResultEquipeRaw } from "./Raw/ClassementResultEquipeRaw";
+import { ClassementResultEquipeRaw } from "./Raw/ClassementResultEquipeRaw.interface";
 import { EquipeRaw } from "./Raw/EquipeRaw.interface";
 import { HistoriqueRaw } from "./Raw/HistoriqueRaw.interface";
 import { OrganismeRaw } from "./Raw/OrganismeRaw.interface";
