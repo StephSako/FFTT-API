@@ -6,7 +6,7 @@ export class Joueur {
     prenom: string;
     points?: number | null;
     isHomme?: boolean | null;
-    classementOfficiel?: string | null;
+    classementOfficiel?: string | null; // TODO Vérifier string
     echelon?: string | null;
     place?: number | null;
 

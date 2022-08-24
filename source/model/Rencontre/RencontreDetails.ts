@@ -1,3 +1,4 @@
+import { DynamicObj } from "../DynamicObj.interface";
 import { JoueurRencontre } from "./JoueurRencontre";
 import { PartieRencontre } from "./PartieRencontre";
 
@@ -6,8 +7,8 @@ export class RencontreDetails {
     nomEquipeB: string;
     scoreEquipeA: number;
     scoreEquipeB: number;
-    joueursA: JoueurRencontre[];
-    joueursB: JoueurRencontre[];
+    joueursA: DynamicObj; // TODO JoueurRencontre[];
+    joueursB: DynamicObj; // TODO JoueurRencontre[];
     parties: PartieRencontre[];
     expectedScoreEquipeA: number;
     expectedScoreEquipeB: number;
@@ -17,9 +18,9 @@ export class RencontreDetails {
         nomEquipeB: string,
         scoreEquipeA: number,
         scoreEquipeB: number,
-        joueursA: any[],
-        joueursB: any[],
-        parties: any[],
+        joueursA: DynamicObj,
+        joueursB: DynamicObj,
+        parties: PartieRencontre[],
         expectedScoreEquipeA: number,
         expectedScoreEquipeB: number
     )

@@ -4,3 +4,5 @@ package-json.lock
 package-lock.json
 coverage/
 .vscode/
+.env
+.idea/
