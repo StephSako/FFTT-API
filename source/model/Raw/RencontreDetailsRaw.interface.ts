@@ -1,15 +1,15 @@
 export interface ResutatDetailsRencontreRaw {
     equa: string;
     equb: string;
-    resa: string; // TODO
-    resb: string; // TODO
+    resa: string; // TODO type + Array.isArray dans createFromArray
+    resb: string; // TODO type
 }
 
 export interface JoueurDetailsRencontreRaw {
     xja: string; // Libelle du joueur A
     xjb: string; // Libelle du joueur B
-    xca: number; // Classement du joueur B
-    xcb: number; // Classement du joueur B
+    xca: string; // Classement du joueur B
+    xcb: string; // Classement du joueur B
 }
 
 export interface PartieDetailsRencontreRaw {
