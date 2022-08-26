@@ -8,16 +8,7 @@ import { Utils } from "./Utils.service";
 import removeAccents from 'remove-accents';
 import { PartieDetailsRencontreRaw, RencontreDetailsRaw } from "../Model/Raw/RencontreDetailsRaw.interface";
 import { PointsEtSexeIntrouvableException } from "../Exception/PointsEtSexeIntrouvableException";
-
-interface Expected {
-    expectedA: number,
-    expectedB: number,
-}
-
-interface Scores {
-    scoreA: number,
-    scoreB: number,
-}
+import { ExpectedPoints, Scores } from "../Model/ScoreEtPoints.interface";
 
 export class RencontreDetailsFactory
 {
@@ -29,9 +20,6 @@ export class RencontreDetailsFactory
 
     public async createFromArray(rencontreDetails: RencontreDetailsRaw, clubEquipeA: string, clubEquipeB: string): Promise<RencontreDetails>
     {
-        rencontreDetails.joueur = rencontreDetails.joueur ? rencontreDetails.joueur : [];
-        rencontreDetails.partie = rencontreDetails.partie ? rencontreDetails.partie : [];
-        
         let joueursA: string[][] = [];
         let joueursB: string[][] = [];
         rencontreDetails.joueur.forEach((joueur: any) => {
@@ -41,7 +29,6 @@ export class RencontreDetailsFactory
 
         let joueursAFormatted = await this.formatJoueurs(joueursA, clubEquipeA);
         let joueursBFormatted = await this.formatJoueurs(joueursB, clubEquipeB);
-
         let parties: PartieRencontre[] = this.getParties(rencontreDetails.partie);
         let scoreA: number, scoreB: number, scores: any;
 
@@ -76,14 +63,14 @@ export class RencontreDetailsFactory
      * @return array{expectedA: float, expectedB: float}
      */
     // TODO Creer une interface pour joueursAFormatted et joueursBFormatted
-    private getExpectedPoints(parties: PartieRencontre[], joueursAFormatted: any, joueursBFormatted: any): Expected
+    public getExpectedPoints(parties: PartieRencontre[], joueursAFormatted: DynamicObj, joueursBFormatted: DynamicObj): ExpectedPoints
     {
         let expectedA: number = 0;
         let expectedB: number = 0;
 
         parties.forEach((partie: PartieRencontre) => {
-            let adversaireA = partie.adversaireA;
-            let adversaireB = partie.adversaireB;
+            let adversaireA: string = partie.adversaireA;
+            let adversaireB: string = partie.adversaireB;
             let joueurAPoints: string | number | null, joueurBPoints: string | number | null;
 
             if (Utils.isset(joueursAFormatted[adversaireA])) {
@@ -100,7 +87,7 @@ export class RencontreDetailsFactory
                 joueurBPoints = 'NONE';
             }
 
-            if (joueurAPoints && joueurBPoints) {
+            if (joueurAPoints && joueurBPoints) { // TODO Condition voulue si les deux sont à 'NONE' ?
                 if (joueurAPoints === joueurBPoints) {
                     expectedA += 0.5;
                     expectedB += 0.5;
@@ -122,7 +109,7 @@ export class RencontreDetailsFactory
      * @param Partie[] parties
      * @return array{scoreA: int, scoreB: int}
      */
-    private getScores(parties: PartieRencontre[]): Scores
+    public getScores(parties: PartieRencontre[]): Scores
     {
         let scoreA: number = 0;
         let scoreB: number = 0;
@@ -143,7 +130,7 @@ export class RencontreDetailsFactory
      * @param string playerClubId
      * @return array<string, Joueur>
      */
-    private formatJoueurs(nomPrenomJoueurs: string[][], playerClubId: string): Promise<DynamicObj>
+    public formatJoueurs(nomPrenomJoueurs: string[][], playerClubId: string): Promise<DynamicObj>
     {
         return this.api.getJoueursByClub(playerClubId).then((result: Joueur[]) => {
             let joueursClub: Joueur[] = result;
@@ -153,20 +140,21 @@ export class RencontreDetailsFactory
                 let nomPrenom: string = joueur[0];
                 let nom: string, prenom: string;
                 [nom, prenom] = Utils.returnNomPrenom(nomPrenom);
-                joueurs.nomPrenom = this.formatJoueur(prenom, nom, joueur[1], joueursClub);
+                joueurs[nomPrenom] = this.formatJoueur(prenom, nom, joueur[1], joueursClub);
             })
+            
             return joueurs;
         })
     }
 
     /**
-     * @param string prenom
-     * @param string nom
-     * @param string points
-     * @param array joueursClub
-     * @return Joueur
+     * @param prenom 
+     * @param nom 
+     * @param sexeEtPoints 
+     * @param joueursClub 
+     * @returns 
      */
-    private formatJoueur(prenom: string, nom: string, sexeEtPoints: string, joueursClub: Joueur[]): JoueurRencontre
+    public formatJoueur(prenom: string, nom: string, sexeEtPoints: string, joueursClub: Joueur[]): JoueurRencontre
     {
         if (nom === "" && prenom === "Absent") {
             return new JoueurRencontre(nom, prenom, "", null, null);
@@ -175,16 +163,16 @@ export class RencontreDetailsFactory
         let i: number = 0;
         while (i < joueursClub.length) {
             if (joueursClub[i].nom === removeAccents(nom) && joueursClub[i].prenom === prenom) {
-                let result = sexeEtPoints.match(/^(N.[0-9]*- )?([A-Z]{1}) ([0-9]+)pts$/) ??[]
+                let result = sexeEtPoints.match(/^(N.[0-9]*- )?([A-Z]{1}) ([0-9]+)pts$/)
 
-                if (!result.length) {
+                if (result === null || !result.length) {
                     throw new PointsEtSexeIntrouvableException(sexeEtPoints)
                 }
 
                 let playerPoints: number = Number(result.slice(-1) ?? 0); // Dernier item du tableau de matches
                 let sexe: string = result.slice(result.length - 2, result.length - 1).toString() ?? ''; // Avant-dernier item du tableau de matches
 
-                return new JoueurRencontre( // TODO PAS DE RETURN DANS UN FOREACH
+                return new JoueurRencontre(
                 joueursClub[i].nom,
                     joueursClub[i].prenom,
                     joueursClub[i].licence,
@@ -195,14 +183,14 @@ export class RencontreDetailsFactory
             i++;
         }
 
-        return new JoueurRencontre(nom, prenom, "", null, null);
+        return new JoueurRencontre(nom, prenom, '', null, null);
     }
 
     /**
      * @param array data
      * @return Partie[]
      */
-    protected getParties(partieDetailsRencontre: PartieDetailsRencontreRaw[]): PartieRencontre[]
+    public getParties(partieDetailsRencontre: PartieDetailsRencontreRaw[]): PartieRencontre[]
     {
         let parties: PartieRencontre[] = [];
 
