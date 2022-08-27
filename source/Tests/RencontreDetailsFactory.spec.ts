@@ -76,14 +76,13 @@ describe('RencontreDetailsFactory service', () => {
         expect(rencontreDetailsFactory.formatJoueur('Vincent', 'THOMAS', 'N.9- H 1112pts', joueursClub)).toEqual(expectedJoueur)
     })
     
-    test('formatJoueur should throw PointsEtSexeIntrouvableException (sexeEtPoints mal formatté)', () => {
+    test('formatJoueur should throw PointsEtSexeIntrouvableException (sexeEtPoints mal formatté)', () => { // TODO no covered
         let joueursClub: Joueur[] = [{
             club: 'LA FRETTE', clubId: '128731', licence: '9529825',
             prenom: 'Vincent', nom: 'THOMAS',
             echelon: 'H', place: 12,
         }];
 
-        jest.spyOn(rencontreDetailsFactory, 'formatJoueur').mockImplementation(() => { throw new PointsEtSexeIntrouvableException('regex qui fail') });
         expect(() => rencontreDetailsFactory.formatJoueur('Vincent', 'THOMAS', 'regex qui fail', joueursClub)).toThrow(PointsEtSexeIntrouvableException);
     })
 
@@ -220,6 +219,36 @@ describe('RencontreDetailsFactory service', () => {
             partiesRencontre,
             2.5, 1.5
         );
+
+        // Joueur du 1er club
+        let joueursPromiseResult_1: Promise<Joueur[]> = Promise.resolve([
+            new Joueur('2537634', '08951331', 'LA FRETTE', 'LIRE', 'Louise', 501, false, '5', null, null),
+            new Joueur('2453535', '08951331', 'LA FRETTE', 'TEXT', 'Vincent', 4321, true, '43', null, null),
+            new Joueur('2453536', '08951331', 'LA FRETTE', 'LE SOUDER', 'Cédric', 500, true, '5', null, null),
+            new Joueur('2453537', '08951331', 'LA FRETTE', 'FRENCHE', 'Rémy', 768, true, '7', null, null)
+        ])
+        
+        // Joueur du 2ème club
+        let joueursPromiseResult_2: Promise<Joueur[]> = Promise.resolve([
+            new Joueur('2537623', '08950330', 'CERGY PONTOISE', 'HIRTH', 'Michel', 678, true, '6', null, null),
+            new Joueur('2453511', '08950330', 'CERGY PONTOISE', 'FANZUTTI', 'Patrick', 564, true, '5', null, null),
+            new Joueur('2453598', '08950330', 'CERGY PONTOISE', 'BON', 'Jean', 500, true, '5', null, null),
+            new Joueur('2453500', '08950330', 'CERGY PONTOISE', 'GESTIN', 'Clarisse', 530, false, '5', null, null)
+        ])
+
+        jest.spyOn(mockFFTTAPI, 'getJoueursByClub').mockReturnValueOnce(joueursPromiseResult_1).mockReturnValueOnce(joueursPromiseResult_2);
+
+        let result: RencontreDetails = await rencontreDetailsFactory.createFromArray(rencontreDetails, '08951331', '08950330');
+        
+        expect(result).toEqual(expectedRencontreDetails)
+    })
+
+    test('getExpectedPoints should return expected points (empty data)', async () => {
+        const resultatDetailsRencontre: ResutatDetailsRencontreRaw = { equa: 'LA FRETTE', equb: 'CERGY PONTOISE', resa: '', resb: '' }
+
+        const rencontreDetails: RencontreDetailsRaw = { joueur: '', partie: '', resultat: resultatDetailsRencontre }
+
+        const expectedRencontreDetails = new RencontreDetails( 'LA FRETTE', 'CERGY PONTOISE', 0, 0, {}, {}, [], 0, 0 );
 
         // Joueur du 1er club
         let joueursPromiseResult_1: Promise<Joueur[]> = Promise.resolve([

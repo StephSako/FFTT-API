@@ -20,19 +20,23 @@ export class RencontreDetailsFactory
 
     public async createFromArray(rencontreDetails: RencontreDetailsRaw, clubEquipeA: string, clubEquipeB: string): Promise<RencontreDetails>
     {
+        rencontreDetails.joueur = typeof rencontreDetails.joueur !== 'string' ? rencontreDetails.joueur : []; // S'il n'y a pas encore de joueurs
+        rencontreDetails.partie = typeof rencontreDetails.partie !== 'string' ? rencontreDetails.partie : []; // S'il n'y a pas encore de parties
+        
         let joueursA: string[][] = [];
         let joueursB: string[][] = [];
+        
         rencontreDetails.joueur.forEach((joueur: any) => {
-            joueursA.push([joueur.xja ?? '', joueur.xca ?? '']); // TODO Check ??
-            joueursB.push([joueur.xjb ?? '', joueur.xcb ?? '']); // TODO Check ??
+            joueursA.push([joueur.xja, joueur.xca]);
+            joueursB.push([joueur.xjb, joueur.xcb]);
         })
 
         let joueursAFormatted = await this.formatJoueurs(joueursA, clubEquipeA);
         let joueursBFormatted = await this.formatJoueurs(joueursB, clubEquipeB);
         let parties: PartieRencontre[] = this.getParties(rencontreDetails.partie);
-        let scoreA: number, scoreB: number, scores: any;
+        let scoreA: number, scoreB: number, scores: Scores;
 
-        if (Array.isArray(rencontreDetails.resultat.resa)) {
+        if (rencontreDetails.resultat.resa === '') {
             scores = this.getScores(parties);
             scoreA = scores.scoreA;
             scoreB = scores.scoreB;
@@ -169,8 +173,8 @@ export class RencontreDetailsFactory
                     throw new PointsEtSexeIntrouvableException(sexeEtPoints)
                 }
 
-                let playerPoints: number = Number(result.slice(-1) ?? 0); // Dernier item du tableau de matches
-                let sexe: string = result.slice(result.length - 2, result.length - 1).toString() ?? ''; // Avant-dernier item du tableau de matches
+                let playerPoints: number = Number(result.slice(-1)); // Dernier item du tableau de matches
+                let sexe: string = result.slice(result.length - 2, result.length - 1).toString(); // Avant-dernier item du tableau de matches
 
                 return new JoueurRencontre(
                 joueursClub[i].nom,

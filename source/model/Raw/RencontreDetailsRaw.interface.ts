@@ -22,6 +22,6 @@ export interface PartieDetailsRencontreRaw {
 
 export interface RencontreDetailsRaw {
     resultat: ResutatDetailsRencontreRaw;
-    joueur: JoueurDetailsRencontreRaw[];
-    partie: PartieDetailsRencontreRaw[];
+    joueur: JoueurDetailsRencontreRaw[] | string;
+    partie: PartieDetailsRencontreRaw[] | string;
 }
