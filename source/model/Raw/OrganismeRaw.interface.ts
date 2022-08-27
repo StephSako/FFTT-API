@@ -1,6 +1,6 @@
 export interface OrganismeRaw {
     libelle: string;
-    id: number;
+    id: string;
     code: string;
-    idPere: number ;
+    idPere: string ;
 }

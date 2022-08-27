@@ -7,14 +7,14 @@ export class Actualite {
     categorie: string;
 
     constructor (
-        date: Date,
+        date: string,
         titre: string,
         description: string,
         url: string,
         photo: string, 
         categorie: string)
     {
-        this.date = date;
+        this.date = new Date(date);
         this.titre = titre;
         this.description = description;
         this.url = url;

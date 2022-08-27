@@ -33,7 +33,7 @@ export class ApiRequest {
 
     public send = async (uri: string): Promise<ResponseData> => {
         let response: AxiosResponse = await axios.get(uri);
-        let content = response.data;
+        let content: any = response.data;
         content = content.replace(/&(?!#?[a-z0-9]+;)/, '&amp;'); // TODO Régler 'n�7'
         // content = decodeURIComponent(escape(content));
         content = decode(content);
@@ -41,10 +41,9 @@ export class ApiRequest {
         return content;
     }
 
-    public get(request: string, params: object = {}, queryParameter: string | null = null): Promise<ResponseData>
+    public get(request: string, params: object = {}, queryParameter: string | null = null): Promise<any>
     {
         let chaine = this.prepare(request, params, queryParameter);
-
         return this.send(chaine)
             .then((result: ResponseData) => {
                 // console.log(result);

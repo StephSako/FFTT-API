@@ -6,13 +6,13 @@ export class Organisme {
 
     constructor (
         libelle: string,
-        id: number,
+        id: string,
         code: string,
-        idPere: number)
+        idPere: string)
     {
         this.libelle = libelle;
-        this.id = id;
+        this.id = Number(id);
         this.code = code;
-        this.idPere = idPere;
+        this.idPere = Number(idPere);
     }
 }

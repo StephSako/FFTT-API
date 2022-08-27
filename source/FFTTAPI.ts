@@ -30,7 +30,6 @@ import { PartieRaw } from "./Model/Raw/PartieRaw.interface";
 import { RencontreRaw } from "./Model/Raw/RencontreRaw.interface";
 import { ParamsEquipe } from "./Model/ParamsEquipe.interface";
 import { UnvalidatedPartieRaw } from "./Model/Raw/ValidatedPartieRaw.interface";
-import { ResponseData } from "./Model/ResponseData.interface";
 import { InvalidCredidentials } from "./Exception/InvalidCredidentials";
 import { ClubNotFoundException } from "./Exception/ClubNotFoundException";
 import { JoueurNotFound } from "./Exception/JoueurNotFound";
@@ -48,6 +47,7 @@ import { PouleResultEquipeRaw } from "./Model/Raw/PouleResultEquipeRaw.interface
 import { TourResultEquipeRaw } from "./Model/Raw/TourResultEquipeRaw.interface";
 import { TourResultEquipe } from "./Model/TourResultEquipe";
 import { RencontreDetailsRaw } from "./Model/Raw/RencontreDetailsRaw.interface";
+import { ActualiteRaw } from "./Model/Raw/ActualiteRaw.interface";
 
 // TODO Number() dans les constructeurs
 export class FFTTAPI
@@ -98,7 +98,7 @@ export class FFTTAPI
     }
 
     /**
-     * @param string type
+     * @param string type (F = Fédération, Z = Zone, L=Ligue, D=Département)
      * @return Organisme[]
      * @throws Exception\InvalidURIParametersException
      * @throws Exception\URIPartNotValidException
@@ -113,16 +113,16 @@ export class FFTTAPI
         return this.apiRequest.get('xml_organisme',
         {
             type: type,
-        }).then((result: ResponseData) => {
+        }).then((result: any) => {
             let dataOrganismes: OrganismeRaw[] = result.organisme;
-
             let organismes: Organisme[] = [];
-            dataOrganismes.forEach((organisme: OrganismeRaw) => {
+
+            dataOrganismes.forEach((organisme: OrganismeRaw) => { // TODO Problème si un seul organismes listé / USe wrappedArrayIfUnique
                 organismes.push(new Organisme(
                     organisme.libelle,
-                    Number(organisme.id),
+                    organisme.id,
                     organisme.code,
-                    Number(organisme.idPere)
+                    organisme.idPere
                 ));
             })
     
@@ -144,7 +144,7 @@ export class FFTTAPI
         return this.apiRequest.get('xml_club_dep2',
         {
             dep: departementId,
-        }).then((result: ResponseData) => {
+        }).then((result: any) => {
             let clubData: ClubRaw[] = result.club;
             return ClubFactory.createClubFromArray(clubData);
         })
@@ -160,7 +160,7 @@ export class FFTTAPI
         return this.apiRequest.get('xml_club_b',
         {
             ville: name,
-        }).then((result: ResponseData) => {
+        }).then((result: any) => {
             let clubData: ClubRaw[] = Utils.wrappedArrayIfUnique(result.club);
             return ClubFactory.createClubFromArray(clubData);
         }).catch(_e => [])
@@ -179,7 +179,7 @@ export class FFTTAPI
         return this.apiRequest.get('xml_club_detail',
         {
             club: clubId,
-        }).then((result: ResponseData) => {
+        }).then((result: any) => {
             let clubData: ClubDetailsRaw = result.club;
     
             if (!clubData.numero) {
@@ -218,7 +218,7 @@ export class FFTTAPI
         return this.apiRequest.get('xml_liste_joueur_o',
         {
             club: clubId
-        }).then((result : ResponseData) => {
+        }).then((result : any) => {
             let joueursResult: JoueurRaw[]  = result.joueur;
             let joueurs: Joueur[] = [];
     
@@ -260,7 +260,7 @@ export class FFTTAPI
         {
             nom: removeAccents(nom).replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0'),
             prenom: removeAccents(prenom).replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0'),
-        }).then((result: ResponseData) => {
+        }).then((result: any) => {
             let arrayJoueurs: JoueurRaw[] = Utils.wrappedArrayIfUnique(result.joueur);
             let joueurs: Joueur[] = [];
     
@@ -303,7 +303,7 @@ export class FFTTAPI
         return this.apiRequest.get('xml_licence_b',
         {
             licence: licenceId
-        }).then((result: ResponseData) => {
+        }).then((result: any) => {
             // TODO Creer une interface JoueurClassementDetailsRaw
             let joueurResult: any = result;
     
@@ -351,7 +351,7 @@ export class FFTTAPI
         return this.apiRequest.get('xml_joueur',
         {
             licence: licence
-        }).then((result: ResponseData) => {
+        }).then((result: any) => {
             let joueurDetails: ClassementRaw = result.joueur;
     
             return new Classement(
@@ -386,7 +386,7 @@ export class FFTTAPI
             type: type,
             epreuve: idEpreuve, // 'E' = Equipe, 'I' = Individuelle
             organisme: idOrganisme
-         }).then((result: ResponseData) => {
+         }).then((result: any) => {
              let divisionsData: DivisionRaw[] = result.division ?? [];
              let divisions: Division[] = [];
 
@@ -412,7 +412,7 @@ export class FFTTAPI
         return this.apiRequest.get('xml_histo_classement',
         {
             numlic: licenceId
-        }).then((result: ResponseData) => {
+        }).then((result: any) => {
             let classementsData: HistoriqueRaw[] = Utils.wrappedArrayIfUnique(result.histo);
             let classements: Historique[] = [];
     
@@ -445,7 +445,7 @@ export class FFTTAPI
         return this.apiRequest.get('xml_partie_mysql',
         {
             licence: joueurId,
-        }).then((result: ResponseData) => {
+        }).then((result: any) => {
             let partiesData: PartieRaw[] = result.partie ? Utils.wrappedArrayIfUnique(result.partie) : [];
             let parties: Partie[] = [];
 
@@ -506,7 +506,7 @@ export class FFTTAPI
         return this.apiRequest.get('xml_partie',
         {
             numlic: joueurId
-        }).then(async (result: ResponseData) => {
+        }).then(async (result: any) => {
             let validatedParties: Partie[] = await this.getPartiesJoueurByLicence(joueurId);
             let allParties: any;
             try {
@@ -665,7 +665,7 @@ export class FFTTAPI
 
         if (type) params.type = type;
 
-        return this.apiRequest.get('xml_equipe', params).then((result: ResponseData) => {
+        return this.apiRequest.get('xml_equipe', params).then((result: any) => {
             let equipesData: EquipeRaw[] = Utils.wrappedArrayIfUnique(result.equipe) ?? [];
             let equipes: Equipe[] = [];
 
@@ -702,7 +702,7 @@ export class FFTTAPI
         if (cx_poule) params.cx_poule = cx_poule;
 
         return this.apiRequest.get('xml_result_equ', params, lienDivision)
-            .then((result: ResponseData) => {
+            .then((result: any) => {
                 switch(action) { 
                     case 'classement': {
                         let resultData: ClassementResultEquipeRaw[] = result.classement;
@@ -780,7 +780,7 @@ export class FFTTAPI
      */
     public getRencontrePouleByLienDivision(lienDivision: string): Promise<Rencontre[]>
     {
-        return this.apiRequest.get('xml_result_equ', {}, lienDivision).then((result: ResponseData) => {
+        return this.apiRequest.get('xml_result_equ', {}, lienDivision).then((result: any) => {
             let rencontresData = result.tour;
             let rencontres: Rencontre[] = [];
 
@@ -858,13 +858,13 @@ export class FFTTAPI
      */
     public getActualites(): Promise<Actualite[]>
     {
-        return this.apiRequest.get('xml_new_actu').then((data: ResponseData) => {
-            let actualites = Utils.wrappedArrayIfUnique(data.news);
+        return this.apiRequest.get('xml_new_actu').then((data: any) => {
+            let actualites: any = Utils.wrappedArrayIfUnique(data.news);
             let result: Actualite[] = [];
 
-            actualites.forEach((dataActualite: Actualite) => {
+            actualites.forEach((dataActualite: ActualiteRaw) => {
                 result.push(new Actualite(
-                    new Date(dataActualite.date),
+                    dataActualite.date,
                     dataActualite.titre,
                     dataActualite.description,
                     dataActualite.url,
