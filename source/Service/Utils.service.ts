@@ -46,9 +46,10 @@ export class Utils
     /**
      * @param array 
      */
-    public static wrappedArrayIfUnique(array: any): any
+    public static wrappedArrayIfUnique(array: any): any[]
     {
-        return array && !Array.isArray(array) ? [array] : array;
+        if (!array) return []
+        return !Array.isArray(array) ? [array] : array;
     }
 
     public static isset(val?: any): boolean {
@@ -94,5 +95,13 @@ export class Utils
      */
     public static getPreviousMonthsYear(): number {
         return moment(new Date()).subtract(1, 'months').year()
+    }
+
+    public static returnStringOrNull(value: string): string | null {
+        return value === '' ? null : value;
+    }
+    
+    public static returnNumberOrNull(value: string): number | null {
+        return value === '' ? null : Number(value);
     }
 }

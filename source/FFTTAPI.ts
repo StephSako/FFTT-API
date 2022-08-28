@@ -48,6 +48,7 @@ import { TourResultEquipeRaw } from "./Model/Raw/TourResultEquipeRaw.interface";
 import { TourResultEquipe } from "./Model/TourResultEquipe";
 import { RencontreDetailsRaw } from "./Model/Raw/RencontreDetailsRaw.interface";
 import { ActualiteRaw } from "./Model/Raw/ActualiteRaw.interface";
+import { JoueurClassementDetailsRaw } from "./Model/Raw/JoueurClassementDetailsRaw.interface";
 
 // TODO Number() dans les constructeurs
 export class FFTTAPI
@@ -104,9 +105,9 @@ export class FFTTAPI
      * @throws Exception\URIPartNotValidException
      * @throws NoFFTTResponseException
      */
-    public getOrganismes(type: string = "Z"): Promise<Organisme[]>
+    public getOrganismes(type: string = 'L'): Promise<Organisme[]>
     {
-        if (!['Z', 'L', 'D'].includes(type)) {
+        if (type && !['Z', 'L', 'D', 'F'].includes(type)) {
             type = 'L';
         }
 
@@ -114,7 +115,7 @@ export class FFTTAPI
         {
             type: type,
         }).then((result: any) => {
-            let dataOrganismes: OrganismeRaw[] = result.organisme;
+            let dataOrganismes: OrganismeRaw[] = Utils.wrappedArrayIfUnique(result.organisme);
             let organismes: Organisme[] = [];
 
             dataOrganismes.forEach((organisme: OrganismeRaw) => { // TODO Problème si un seul organismes listé / USe wrappedArrayIfUnique
@@ -139,13 +140,13 @@ export class FFTTAPI
      * @throws Exception\URIPartNotValidException
      * @throws NoFFTTResponseException
      */
-    public getClubsByDepartement(departementId: number): Promise<Club[] | Club>
+    public getClubsByDepartement(departementId: number): Promise<Club[]>
     {
         return this.apiRequest.get('xml_club_dep2',
         {
             dep: departementId,
         }).then((result: any) => {
-            let clubData: ClubRaw[] = result.club;
+            let clubData: ClubRaw[] = Utils.wrappedArrayIfUnique(result.club);
             return ClubFactory.createClubFromArray(clubData);
         })
     }
@@ -155,7 +156,7 @@ export class FFTTAPI
      * @return Club[]
      */
     // TODO faire pour tous les paramètres possibles
-    public getClubsByName(name: string): Promise<Club[] | Club>
+    public getClubsByName(name: string): Promise<Club[]>
     {
         return this.apiRequest.get('xml_club_b',
         {
@@ -163,7 +164,7 @@ export class FFTTAPI
         }).then((result: any) => {
             let clubData: ClubRaw[] = Utils.wrappedArrayIfUnique(result.club);
             return ClubFactory.createClubFromArray(clubData);
-        }).catch(_e => [])
+        })
     }
 
     /**
@@ -180,27 +181,27 @@ export class FFTTAPI
         {
             club: clubId,
         }).then((result: any) => {
+            if (!result) throw new ClubNotFoundException(clubId);
+            
             let clubData: ClubDetailsRaw = result.club;
     
-            if (!clubData.numero) {
-                throw new ClubNotFoundException(clubId);
-            }
             return new ClubDetails(
-                Number(clubData.numero),
+                Number(clubData.idclub),
+                clubData.numero,
                 clubData.nom,
-                !clubData.nomsalle ? null : clubData.nomsalle,
-                !clubData.adressesalle1 ? null : clubData.adressesalle1,
-                !clubData.adressesalle2 ? null : clubData.adressesalle2,
-                !clubData.adressesalle3 ? null : clubData.adressesalle3,
-                !clubData.codepsalle ? null : clubData.codepsalle,
-                !clubData.villesalle ? null : clubData.villesalle,
-                !clubData.web ? null : clubData.web,
-                !clubData.nomcor ? null : clubData.nomcor,
-                !clubData.prenomcor ? null : clubData.prenomcor,
-                !clubData.mailcor ? null : clubData.mailcor,
-                !clubData.telcor ? null : clubData.telcor,
-                !clubData.latitude ? null : Number(clubData.latitude),
-                !clubData.longitude ? null : Number(clubData.longitude)
+                Utils.returnStringOrNull(clubData.nomsalle),
+                Utils.returnStringOrNull(clubData.adressesalle1),
+                Utils.returnStringOrNull(clubData.adressesalle2),
+                Utils.returnStringOrNull(clubData.adressesalle3),
+                Utils.returnStringOrNull(clubData.codepsalle),
+                Utils.returnStringOrNull(clubData.villesalle),
+                Utils.returnStringOrNull(clubData.web),
+                Utils.returnStringOrNull(clubData.nomcor),
+                Utils.returnStringOrNull(clubData.prenomcor),
+                Utils.returnStringOrNull(clubData.mailcor),
+                Utils.returnStringOrNull(clubData.telcor),
+                Utils.returnNumberOrNull(clubData.latitude),
+                Utils.returnNumberOrNull(clubData.longitude)
             );
         })
     }
@@ -219,7 +220,7 @@ export class FFTTAPI
         {
             club: clubId
         }).then((result : any) => {
-            let joueursResult: JoueurRaw[]  = result.joueur;
+            let joueursResult: JoueurRaw[] = Utils.wrappedArrayIfUnique(result.joueur);
             let joueurs: Joueur[] = [];
     
             joueursResult.forEach((joueur: JoueurRaw) => {
@@ -232,16 +233,13 @@ export class FFTTAPI
                     Number(joueur.points),
                     joueur.sexe === 'M',
                     null,
-                    joueur.place ? Number(joueur.place) : null,
-                    joueur.echelon ?? null
+                    Utils.returnNumberOrNull(joueur.place),
+                    Utils.returnStringOrNull(joueur.echelon)
                 );
                 delete joueurTmp.classementOfficiel; // Le classement officiel du joueur n'est pas fourni pour cette route
                 joueurs.push(joueurTmp);
             })
             return joueurs;
-        }).catch(_e => {
-            console.info(_e.message);
-            throw new ClubNotFoundException(clubId)
         })
     }
 
@@ -303,12 +301,11 @@ export class FFTTAPI
         return this.apiRequest.get('xml_licence_b',
         {
             licence: licenceId
-        }).then((result: any) => {
-            // TODO Creer une interface JoueurClassementDetailsRaw
-            let joueurResult: any = result;
+        }).then((result: JoueurClassementDetailsRaw) => {
+            let joueurResult: JoueurClassementDetailsRaw = result;
     
-            if (!joueurResult.hasOwnProperty('licence')) throw new JoueurNotFound(licenceId);
-            else joueurResult = joueurResult.licence;
+            // if (!joueurResult.hasOwnProperty('licence')) throw new JoueurNotFound(licenceId);
+            // else joueurResult = joueurResult.licence;
     
             let joueurDetails: JoueurClassementDetails = new JoueurClassementDetails(
                 Number(joueurResult.idlicence),
@@ -319,19 +316,19 @@ export class FFTTAPI
                 joueurResult.nomclub,
                 joueurResult.sexe === 'M' ? true : false,
                 joueurResult.cat,
-                joueurResult.initm ? Number(joueurResult.initm) : Number(joueurResult.point),
+                Utils.returnNumberOrNull(joueurResult.initm) ?? Number(joueurResult.point),
                 Number(joueurResult.point),
-                joueurResult.pointm ? Number(joueurResult.pointm) : Number(joueurResult.point),
-                joueurResult.apointm ? Number(joueurResult.apointm) : Number(joueurResult.point),
-                joueurResult.ja ?? null,
-                joueurResult.arb ?? null,
-                joueurResult.tech ?? null,
-                joueurResult.mutation ?? null,
-                joueurResult.natio ?? null,
-                joueurResult.echelon ?? null,
-                joueurResult.place ? Number(joueurResult.place) : null,
-                joueurResult.type ?? null,
-                joueurResult.certif ?? null
+                Utils.returnNumberOrNull(joueurResult.pointm) ?? Number(joueurResult.point),
+                Utils.returnNumberOrNull(joueurResult.apointm) ?? Number(joueurResult.point),
+                Utils.returnStringOrNull(joueurResult.ja),
+                Utils.returnStringOrNull(joueurResult.arb),
+                Utils.returnStringOrNull(joueurResult.tech),
+                Utils.returnStringOrNull(joueurResult.mutation),
+                joueurResult.natio,
+                Utils.returnStringOrNull(joueurResult.echelon),
+                Utils.returnNumberOrNull(joueurResult.place),
+                Utils.returnStringOrNull(joueurResult.type),
+                joueurResult.certif
             );
             return joueurDetails;
         }).catch(_e /*: NoFFTTResponseException*/ => {
@@ -387,7 +384,7 @@ export class FFTTAPI
             epreuve: idEpreuve, // 'E' = Equipe, 'I' = Individuelle
             organisme: idOrganisme
          }).then((result: any) => {
-             let divisionsData: DivisionRaw[] = result.division ?? [];
+             let divisionsData: DivisionRaw[] = Utils.wrappedArrayIfUnique(result.division);
              let divisions: Division[] = [];
 
              divisionsData.forEach((division: DivisionRaw) => {
@@ -446,7 +443,7 @@ export class FFTTAPI
         {
             licence: joueurId,
         }).then((result: any) => {
-            let partiesData: PartieRaw[] = result.partie ? Utils.wrappedArrayIfUnique(result.partie) : [];
+            let partiesData: PartieRaw[] = Utils.wrappedArrayIfUnique(result.partie);
             let parties: Partie[] = [];
 
             partiesData.forEach((partie: PartieRaw) => {
@@ -666,7 +663,7 @@ export class FFTTAPI
         if (type) params.type = type;
 
         return this.apiRequest.get('xml_equipe', params).then((result: any) => {
-            let equipesData: EquipeRaw[] = Utils.wrappedArrayIfUnique(result.equipe) ?? [];
+            let equipesData: EquipeRaw[] = Utils.wrappedArrayIfUnique(result.equipe);
             let equipes: Equipe[] = [];
 
             equipesData.forEach((dataEquipe: EquipeRaw) => {

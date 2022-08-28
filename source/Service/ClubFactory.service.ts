@@ -8,11 +8,12 @@ export class ClubFactory
      * @param ClubRaw[] data
      * @return Club[]
      */
-    public static createClubFromArray(data: ClubRaw[]): Club[] | Club
+    public static createClubFromArray(clubsRaw: ClubRaw[]): Club[]
     {
-        let result: Club[] = [];
-        data.forEach((clubData: ClubRaw) => {
-            result.push(new Club(
+        let clubs: Club[] = [];
+        
+        clubsRaw.forEach((clubData: ClubRaw) => {
+            clubs.push(new Club(
                 clubData.idclub,
                 clubData.typeclub,
                 clubData.numero,
@@ -20,6 +21,6 @@ export class ClubFactory
                 clubData.validation ? Utils.createDate(clubData.validation) : null
             ));
         })
-        return result.length === 1 ? result[0] : result;
+        return clubs;
     }
 }

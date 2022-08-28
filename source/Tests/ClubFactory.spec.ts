@@ -5,13 +5,14 @@ import { ClubFactory } from "../Service/ClubFactory.service"
 describe('ClubFactory service', () => {
 
     test('createClubFromArray should return only one Equipe', () => {
-        let expectedClubs: Club = {
+        let expectedClubs: Club[] = [{
             dateValidation: new Date('2022/09/01'),
             idClub: '1245',
             nom: 'ESFTT',
             numero: '08951331',
             typeClub: 'H'
-        }
+        }]
+
         let clubsRaw: ClubRaw[] = [{
             idclub: '1245',
             nom: 'ESFTT',
@@ -24,13 +25,14 @@ describe('ClubFactory service', () => {
     })
     
     test('createClubFromArray should return only one Equipe without validation date', () => {
-        let expectedClubs: Club = {
+        let expectedClubs: Club[] = [{
             dateValidation: null,
             idClub: '1245',
             nom: 'ESFTT',
             numero: '08951331',
             typeClub: 'H'
-        }
+        }]
+
         let clubsRaw: ClubRaw[] = [{
             idclub: '1245',
             nom: 'ESFTT',

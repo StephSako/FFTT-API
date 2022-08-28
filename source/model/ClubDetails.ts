@@ -1,5 +1,6 @@
 export class ClubDetails {
-    numero: number;
+    numero: string;
+    idClub: number;
     nom: string;
     nomSalle: string | null;
     adresseSalle1: string | null;
@@ -16,7 +17,8 @@ export class ClubDetails {
     longitude: number | null;
 
     constructor (
-        numero: number,
+        idClub: number,
+        numero: string,
         nom: string,
         nomSalle: string | null,
         adresseSalle1: string | null,
@@ -33,6 +35,7 @@ export class ClubDetails {
         longitude: number | null
     )
     {
+        this.idClub = idClub;
         this.numero = numero;
         this.nom = nom;
         this.nomSalle = nomSalle;

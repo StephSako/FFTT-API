@@ -4,9 +4,9 @@ export interface JoueurRaw {
     nclub: string;
     nom: string;
     sexe: string;
-    echelon: string | null; // Vaut 'N' ou rien
+    echelon: string; // Vaut 'N' ou rien
     prenom: string;
     points: string;
     clast: string; // Pour xml_liste_joueur.php
-    place: number | null; // Place si numéroté
+    place: string; // Place si numéroté
 }

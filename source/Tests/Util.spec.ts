@@ -86,14 +86,12 @@ describe('Util service', () => {
     
     })
 
-    test('wrappedArrayIfUnique should return null for null', () => {
-        let falseArray = null;
-        expect(Utils.wrappedArrayIfUnique(falseArray)).toEqual(falseArray)
+    test('wrappedArrayIfUnique should return [] for null', () => {
+        expect(Utils.wrappedArrayIfUnique(null)).toEqual([])
     })
     
     test('wrappedArrayIfUnique should return undefined for undefined', () => {
-        let falseArray = undefined;
-        expect(Utils.wrappedArrayIfUnique(falseArray)).toEqual(falseArray)
+        expect(Utils.wrappedArrayIfUnique(undefined)).toEqual([])
     })
     
     test('removeAccentLowerCaseRegex should return j.r.MY for j?r?my', () => {
@@ -158,5 +156,21 @@ describe('Util service', () => {
 
     test('returnNomPrenom should return [ABBAS, Abdel-Jalil] for ABBAS Abdel-Jalil', () => {
         expect(Utils.returnNomPrenom('ABBAS Abdel-Jalil')).toEqual(['ABBAS', 'Abdel-Jalil'])
+    })
+    
+    test('returnStringOrNull should return null for "" ', () => {
+        expect(Utils.returnStringOrNull('')).toEqual(null)
+    })
+    
+    test('returnStringOrNull should return "value" for "value"', () => {
+        expect(Utils.returnStringOrNull('value')).toEqual('value')
+    })
+    
+    test('returnNumberOrNull should return null for "" ', () => {
+        expect(Utils.returnNumberOrNull('')).toEqual(null)
+    })
+    
+    test('returnNumberOrNull should return 3 for "3"', () => {
+        expect(Utils.returnNumberOrNull('3')).toEqual(3)
     })
 })
