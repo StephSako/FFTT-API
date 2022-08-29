@@ -3,8 +3,8 @@ export interface TourResultEquipeRaw {
     lien: string;
     equa: string;
     equb: string;
-    scorea: number | null;
-    scoreb: number | null;
+    scorea: string;
+    scoreb: string;
     dateprevue: string; // Format 'd/m/Y
     datereelle: string; // Format 'd/m/Y
 }

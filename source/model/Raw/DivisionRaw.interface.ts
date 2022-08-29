@@ -1,4 +1,4 @@
 export interface DivisionRaw {
-    iddivision: number;
+    iddivision: string;
     libelle: string;
 }

@@ -173,4 +173,12 @@ describe('Util service', () => {
     test('returnNumberOrNull should return 3 for "3"', () => {
         expect(Utils.returnNumberOrNull('3')).toEqual(3)
     })
+    
+    test('returnDateOrNull should return null for ""', () => {
+        expect(Utils.returnDateOrNull('')).toEqual(null)
+    })
+    
+    test('returnDateOrNull should return Date(2022/09/24) for "24/09/2022"', () => {
+        expect(Utils.returnDateOrNull('24/09/2022')).toEqual(new Date('2022/09/24'))
+    })
 })

@@ -1,18 +1,18 @@
 export interface ClassementResultEquipeRaw {
     clt: string;
     equipe: string;
-    joue: number;
-    pts: number;
+    joue: string;
+    pts: string;
     numero: string;
-    totvic: number;
-    totdef: number;
-    idequipe: number;
+    totvic: string;
+    totdef: string;
+    idequipe: string;
     idclub: string;
-    poule: number;
-    vic: number;
-    def: number;
-    nul: number;
-    pf: number;
-    pg: number;
-    pp: number;
+    poule: string;
+    vic: string;
+    def: string;
+    nul: string;
+    pf: string;
+    pg: string;
+    pp: string;
 }

@@ -2,8 +2,8 @@ export class Rencontre {
     libelle: string;
     nomEquipeA: string;
     nomEquipeB: string;
-    scoreEquipeA: number;
-    scoreEquipeB: number;
+    scoreEquipeA: number | null;
+    scoreEquipeB: number | null;
     lien: string;
     datePrevue: Date;
     dateReelle: Date | null;
@@ -12,8 +12,8 @@ export class Rencontre {
         libelle: string,
         nomEquipeA: string,
         nomEquipeB: string,
-        scoreEquipeA: number,
-        scoreEquipeB: number,
+        scoreEquipeA: number | null,
+        scoreEquipeB: number | null,
         lien: string,
         datePrevue: Date,
         dateReelle: Date | null)

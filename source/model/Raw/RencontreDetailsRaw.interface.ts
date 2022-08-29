@@ -13,8 +13,8 @@ export interface JoueurDetailsRencontreRaw {
 }
 
 export interface PartieDetailsRencontreRaw {
-    ja: string | null; // Nom Prénom du joueur A
-    jb: string | null; // Nom Prénom du joueur A
+    ja: string; // Nom Prénom du joueur A
+    jb: string; // Nom Prénom du joueur A
     scorea: string;
     scoreb: string;
     detail: string; // TODO A VERIFIER

@@ -45,12 +45,10 @@ import { ParamsPoule } from "./Model/ParamsPoule.interface";
 import { PouleResultEquipe } from "./Model/PouleResultEquipe";
 import { PouleResultEquipeRaw } from "./Model/Raw/PouleResultEquipeRaw.interface";
 import { TourResultEquipeRaw } from "./Model/Raw/TourResultEquipeRaw.interface";
-import { TourResultEquipe } from "./Model/TourResultEquipe";
 import { RencontreDetailsRaw } from "./Model/Raw/RencontreDetailsRaw.interface";
 import { ActualiteRaw } from "./Model/Raw/ActualiteRaw.interface";
 import { JoueurClassementDetailsRaw } from "./Model/Raw/JoueurClassementDetailsRaw.interface";
 
-// TODO Number() dans les constructeurs
 export class FFTTAPI
 {
     private id;
@@ -352,8 +350,8 @@ export class FFTTAPI
             let joueurDetails: ClassementRaw = result.joueur;
     
             return new Classement(
-                joueurDetails.point,
-                joueurDetails.apoint,
+                Number(joueurDetails.point),
+                Number(joueurDetails.apoint),
                 joueurDetails.clast,
                 Number(joueurDetails.clnat),
                 Number(joueurDetails.rangreg),
@@ -420,15 +418,16 @@ export class FFTTAPI
                     Number(splited[3]),
                     Number(classement.phase),
                     Number(classement.point),
-                    classement.echelon ? classement.echelon : null,
-                    classement.place ? Number(classement.point) : null
+                    Utils.returnStringOrNull(classement.echelon),
+                    Utils.returnNumberOrNull(classement.place)
                 );
                 classements.push(historique);
             })
             return classements;
-        }).catch (_e/*: NoFFTTResponseException*/ => {
-            throw new JoueurNotFound(licenceId);
         })
+        // .catch (_e/*: NoFFTTResponseException*/ => {
+        //     throw new JoueurNotFound(licenceId);
+        // })
     }
 
     /**
@@ -690,7 +689,7 @@ export class FFTTAPI
 
     // TODO Faire pour différentes 'action' possibles
     public getClassementPouleByLienDivision(d1: number, action: string | null, cx_poule?: number | null, lienDivision?: string | null)
-    : Promise<ClassementResultEquipe[] | PouleResultEquipe | TourResultEquipe[]>
+    : Promise<ClassementResultEquipe[] | PouleResultEquipe | Rencontre[]>
     {
         let params: ParamsPoule = {
             D1: d1
@@ -745,18 +744,18 @@ export class FFTTAPI
                     case null: {
                         let resultData: TourResultEquipeRaw[] = result.tour;
 
-                        let tours: TourResultEquipe[] = [];
+                        let tours: Rencontre[] = [];
     
                         resultData.forEach((tourData: TourResultEquipeRaw) => {
-                            tours.push(new TourResultEquipe(
+                            tours.push(new Rencontre(
                                 tourData.libelle,
-                                tourData.lien,
                                 tourData.equa,
                                 tourData.equb,
-                                tourData.scorea ? Number(tourData.scorea) : null,
-                                tourData.scoreb ? Number(tourData.scoreb) : null,
-                                tourData.dateprevue, // TODO Type Date
-                                tourData.datereelle // TODO Type Date
+                                Utils.returnNumberOrNull(tourData.scorea),
+                                Utils.returnNumberOrNull(tourData.scoreb),
+                                tourData.lien,
+                                Utils.createDate(tourData.dateprevue),
+                                Utils.returnDateOrNull(tourData.datereelle)
                             ));
                         })
                         return tours;
@@ -787,13 +786,13 @@ export class FFTTAPI
     
                 rencontres.push(new Rencontre(
                     dataRencontre.libelle,
-                    !equipeA ? '': equipeA,
-                    !equipeB ? '': equipeB,
-                    Number(dataRencontre.scorea),
-                    Number(dataRencontre.scoreb),
+                    equipeA,
+                    equipeB,
+                    Utils.returnNumberOrNull(dataRencontre.scorea),
+                    Utils.returnNumberOrNull(dataRencontre.scoreb),
                     dataRencontre.lien,
                     Utils.createDate(dataRencontre.dateprevue),
-                    dataRencontre.datereelle ? Utils.createDate(dataRencontre.datereelle) : null
+                    Utils.returnDateOrNull(dataRencontre.datereelle)
                 ));
             })
             return rencontres;

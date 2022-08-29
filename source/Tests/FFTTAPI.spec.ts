@@ -5,8 +5,11 @@ import { Actualite } from "../Model/Actualite";
 import { Club } from "../Model/Club";
 import { ClubDetails } from "../Model/ClubDetails";
 import { Division } from "../Model/Division";
+import { Equipe } from "../Model/Equipe";
+import { Historique } from "../Model/Historique";
 import { Joueur } from "../Model/Joueur";
 import { Organisme } from "../Model/Organisme";
+import { VirtualPoints } from "../Model/VirtualPoints";
 
 describe('FFTTAPI class', () => {
 
@@ -268,5 +271,95 @@ describe('FFTTAPI class', () => {
         let result: ClubDetails = await mockFFTTAPI.getClubDetails('08951331');
         
         expect(result).toEqual(clubDetails)
+    })
+    
+    test("getHistoriqueJoueurByLicence should return none historique", async () => {
+        let historique: Historique[] = [];
+
+        jest.spyOn(axios, 'get').mockResolvedValue(Promise.resolve({ data: listeVide }));
+        
+        let result: Historique[] = await mockFFTTAPI.getHistoriqueJoueurByLicence('08951331');
+        
+        expect(result).toEqual(historique)
+    })
+    
+    test("getHistoriqueJoueurByLicence should return only one historique", async () => {
+        let historique: Historique[] = [new Historique(2008, 2009, 1, 650, null, null)];
+
+        jest.spyOn(axios, 'get').mockResolvedValue(Promise.resolve({ data: `<?xml version="1.0" encoding="ISO-8859-1"?><liste><histo><echelon></echelon><place></place><point>650</point><saison>Saison 2008 / 2009</saison><phase>1</phase></histo></liste>` }));
+        
+        let result: Historique[] = await mockFFTTAPI.getHistoriqueJoueurByLicence('08951331');
+        
+        expect(result).toEqual(historique)
+    })
+    
+    test("getHistoriqueJoueurByLicence should return two historiques", async () => {
+        let historique: Historique[] = [
+            new Historique(2008, 2009, 1, 650, null, null),
+            new Historique(2022, 2023, 2, 3453, 'N', 8)
+        ];
+
+        jest.spyOn(axios, 'get').mockResolvedValue(Promise.resolve({ data: `<?xml version="1.0" encoding="ISO-8859-1"?><liste><histo><echelon></echelon><place></place><point>650</point><saison>Saison 2008 / 2009</saison><phase>1</phase></histo><histo><echelon>N</echelon><place>8</place><point>3453</point><saison>Saison 2022 / 2023</saison><phase>2</phase></histo></liste>` }));
+        
+        let result: Historique[] = await mockFFTTAPI.getHistoriqueJoueurByLicence('08951331');
+        
+        expect(result).toEqual(historique)
+    })
+
+    test("getEquipesByClub should return none équipe", async () => {
+        let equipes: Equipe[] = [];
+
+        jest.spyOn(axios, 'get').mockResolvedValue(Promise.resolve({ data: listeVide }));
+        
+        let result: Equipe[] = await mockFFTTAPI.getEquipesByClub('08950330', 'F');
+        
+        expect(result).toEqual(equipes)
+    })
+    
+    test("getEquipesByClub should return only one équipe", async () => {
+        let equipes: Equipe[] = [new Equipe(
+            'PONTOISE-CERGY AS 1 - Phase 1',
+            'FED_Nationale 3 Dames Phase 1 Poule 3',
+            'cx_poule=440318&D1=107787&organisme_pere=1',
+            4360, 8986, 'FED_Championnat de France par Equipes Féminin')];
+
+        jest.spyOn(axios, 'get').mockResolvedValue(Promise.resolve({ data: `<?xml version="1.0" encoding="ISO-8859-1"?><liste><equipe><idepr>8986</idepr><libepr>FED_Championnat de France par Equipes Féminin</libepr><idequipe>4360</idequipe><libequipe>PONTOISE-CERGY AS 1 - Phase 1</libequipe><libdivision>FED_Nationale 3 Dames Phase 1 Poule 3</libdivision><liendivision><![CDATA[cx_poule=440318&D1=107787&organisme_pere=1]]></liendivision></equipe></liste>` }));
+        
+        let result: Equipe[] = await mockFFTTAPI.getEquipesByClub('08950330', 'F');
+        
+        expect(result).toEqual(equipes)
+    })
+    
+    test("getEquipesByClub should return two équipes", async () => {
+        let equipes: Equipe[] = [
+            new Equipe(
+                'PONTOISE CERGY AS 2 - Phase 1',
+                'FED_Nationale 1 Messieurs Phase 1 Poule 4',
+                'cx_poule=439509&D1=107427&organisme_pere=1',
+                3540, 8985, 'FED_Championnat de France par Equipes Masculin'
+            ),
+            new Equipe(
+                'PONTOISE-CERGY AS 1 - Phase 1',
+                'FED_Nationale 3 Dames Phase 1 Poule 3',
+                'cx_poule=440318&D1=107787&organisme_pere=1',
+                4360, 8986, 'FED_Championnat de France par Equipes Féminin'
+            )
+        ];
+
+        jest.spyOn(axios, 'get').mockResolvedValue(Promise.resolve({ data: `<?xml version="1.0" encoding="ISO-8859-1"?><liste><equipe><idepr>8985</idepr><libepr>FED_Championnat de France par Equipes Masculin</libepr><idequipe>3540</idequipe><libequipe>PONTOISE CERGY AS 2 - Phase 1</libequipe><libdivision>FED_Nationale 1 Messieurs Phase 1 Poule 4</libdivision><liendivision><![CDATA[cx_poule=439509&D1=107427&organisme_pere=1]]></liendivision></equipe><equipe><idepr>8986</idepr><libepr>FED_Championnat de France par Equipes Féminin</libepr><idequipe>4360</idequipe><libequipe>PONTOISE-CERGY AS 1 - Phase 1</libequipe><libdivision>FED_Nationale 3 Dames Phase 1 Poule 3</libdivision><liendivision><![CDATA[cx_poule=440318&D1=107787&organisme_pere=1]]></liendivision></equipe></liste>` }));
+        
+        let result: Equipe[] = await mockFFTTAPI.getEquipesByClub('08950330');
+        
+        expect(result).toEqual(equipes)
+    })
+
+    test("getVirtualPoints should return none équipe", async () => {
+        let virtualPoints: VirtualPoints = new VirtualPoints(23.75, 1112.25, 117);
+
+        jest.spyOn(mockFFTTAPI, 'getJoueurVirtualPoints').mockResolvedValue(Promise.resolve(virtualPoints));
+        
+        let result: number = await mockFFTTAPI.getVirtualPoints('9529825');
+        
+        expect(result).toEqual(virtualPoints.monthlyPointsWon)
     })
 })

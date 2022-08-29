@@ -1,20 +1,20 @@
 export interface ClassementRaw {
-    point: number;
-    apoint: number;
+    point: string;
+    apoint: string;
     clast: string;
-    rangreg: number;
-    clnat: number;
-    rangdep: number;
-    valcla: number;
-    valinit: number;
+    rangreg: string;
+    clnat: string;
+    rangdep: string;
+    valcla: string;
+    valinit: string;
     licence: string;
     nom: string;
     prenom: string;
     club: string;
     nclub: string;
-    natio: string | null;
-    clglob: number;
-    aclglob: number;
+    natio: string;
+    clglob: string;
+    aclglob: string;
     categ: string;
     clpro: string;
 }

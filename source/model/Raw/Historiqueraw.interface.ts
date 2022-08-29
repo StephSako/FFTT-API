@@ -1,7 +1,7 @@
 export interface HistoriqueRaw {
-    echelon: string | null; /* Vaut 'N' si dans équipe nationale */
-    place: number | null; /* Placement si classé dans les 1000 premiers français */;
+    echelon: string; /* Vaut 'N' si dans équipe nationale */
+    place: string; /* Placement si classé dans les 1000 premiers français */;
     saison: string;
-    phase: number;
-    point: number;
+    phase: string;
+    point: string;
 }

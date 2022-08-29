@@ -1,14 +1,14 @@
 export interface PartieRaw {
     licence: string;
     vd: string;
-    numjourn: number | null;
+    numjourn: string;
     date: string;
     pointres: string;
     coefchamp: string;
     advlic: string;
     advsexe: string;
     advnompre: string;
-    advclaof: number;
-    idpartie: number;
+    advclaof: string;
+    idpartie: string;
     codechamp: string;
 }

@@ -104,4 +104,8 @@ export class Utils
     public static returnNumberOrNull(value: string): number | null {
         return value === '' ? null : Number(value);
     }
+    
+    public static returnDateOrNull(value: string): Date | null {
+        return value === '' ? null : this.createDate(value);
+    }
 }
